@@ -9,7 +9,7 @@
 	<dependencies>
 		<dependency>
 			<groupId>OpenGL-Game</groupId>
-			<artifactId>OpenGL-Game</artifactId>
+			<artifactId>OpenGL-GameEngine</artifactId>
 			<version>0.1.0-SNAPSHOT</version>
 		</dependency>
 	</dependencies>
