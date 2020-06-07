@@ -3,8 +3,6 @@ package models;
 import org.lwjgl.opengl.GL11;
 
 import modelsLibrary.RegularFlatTerrain3D;
-import renderEngine.Draw3DRenderer;
-import renderEngine.Loader;
 import renderEngine.MasterRenderer;
 import renderEngine.RenderingParameters;
 
