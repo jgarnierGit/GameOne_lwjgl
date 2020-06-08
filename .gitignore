@@ -1,1 +1,12 @@
-/target/
+.project
+.classpath
+bin
+*.log
+target
+.settings
+*.blend1
+.git
+*.blend
+*.obj
+*.mtl
+*.png

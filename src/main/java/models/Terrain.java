@@ -6,10 +6,11 @@ import modelsLibrary.RegularFlatTerrain3D;
 import renderEngine.MasterRenderer;
 import renderEngine.RenderingParameters;
 
+//TODO try to use more composition
 public class Terrain extends RegularFlatTerrain3D {
 
-	public Terrain(MasterRenderer masterRenderer, String alias) {
-		super(masterRenderer.getLoader(), masterRenderer.get3DRenderer(), alias, 10, 2, 0, 0, 0);
+	public Terrain(MasterRenderer masterRenderer, String alias,int size, int definition, int x, int z, float elevation) {
+		super(masterRenderer.getLoader(), masterRenderer.get3DRenderer(), alias, size, definition, x, z, elevation);
 		setupTerrain();
 	}
 
@@ -19,7 +20,7 @@ public class Terrain extends RegularFlatTerrain3D {
 		// TODO hide from this interface.
 		//terrainParameters.disableRenderOptions();
 		terrainParameters.doNotUseEntities();
-		terrainParameters.setRenderMode(GL11.GL_POINTS);
+		terrainParameters.setRenderMode(GL11.GL_TRIANGLES);
 		//this.invertNormals();
 	}
 

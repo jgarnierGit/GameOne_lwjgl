@@ -6,7 +6,6 @@ import java.io.IOException;
 import modelsManager.Model3D;
 import modelsManager.Model3DImporter;
 import modelsManager.ModelUtils;
-import renderEngine.Loader;
 import renderEngine.MasterRenderer;
 
 public class Monkey extends Model3D{
