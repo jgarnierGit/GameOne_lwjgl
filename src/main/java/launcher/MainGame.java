@@ -7,11 +7,11 @@ import java.util.List;
 import org.lwjglx.util.vector.Vector3f;
 
 import entities.Camera;
-import entities.Player;
 import inputListeners.InputListeners;
 import inputListeners.KeyboardInputListener;
 import inputListeners.MouseInputListener;
 import inputListeners.UserInputHandler;
+import logic.Player;
 import logic.TerrainManager;
 import models.Monkey;
 import renderEngine.DisplayManager;
@@ -33,17 +33,15 @@ public class MainGame {
 		Monkey monkey = new Monkey(masterRenderer);
 		Player player = new Player(keyboardInputHandler, monkey, new Vector3f(-5,0,0), 0, 0, 0, 1);
 		
-		player.bindInputHanlder();
-		camera.bindInputHanlder();
 		//TODO create interface Model3D to guide user for minimal structure
 		//camera.attachToEntity(player);
 		
 		//TODO put in there while (DisplayManager.isRunning()) { with all logic.
 		GameExecutor gameExecutor = new GameExecutor();
 		//InputListener inputListener = new InputListener();
-		TerrainManager terrainGenerator = new TerrainManager(masterRenderer);
+		TerrainManager terrainGenerator = new TerrainManager(masterRenderer, keyboardInputHandler);
 	//	gameExecutor.render(masterRenderer,player,terrain);
-		terrainGenerator.updateTerrains();
+		terrainGenerator.initiateTerrain();
 		UserInputHandler userInputHandler = UserInputHandler.create();
 		while (DisplayManager.isRunning()) {
 			userInputHandler.updateUserInputs();
