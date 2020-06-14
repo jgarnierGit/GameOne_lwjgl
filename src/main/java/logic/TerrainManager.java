@@ -1,17 +1,15 @@
 package logic;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Random;
-import java.util.logging.Level;
 
 import org.lwjgl.glfw.GLFW;
 import org.lwjgl.opengl.GL11;
 
 import entities.EntityContainer;
 import inputListeners.InputInteractable;
-import inputListeners.InputListeners;
+import inputListeners.PlayerInputListener;
 import modelsLibrary.RegularFlatTerrain3D;
 import modelsLibrary.SimpleGeom;
 import modelsLibrary.Terrain3D;
@@ -23,15 +21,23 @@ public class TerrainManager extends InputInteractable implements EntityContainer
 	MasterRenderer masterRenderer;
 	Random random;
 	
-	public TerrainManager(MasterRenderer masterRenderer,InputListeners inputListener) {
+	private TerrainManager(MasterRenderer masterRenderer,PlayerInputListener inputListener) {
 		super(inputListener);
 		this.masterRenderer = masterRenderer;
 		random = new Random();
 	}
 	
+	public static TerrainManager create(MasterRenderer masterRenderer,PlayerInputListener inputListener) {
+		TerrainManager terrainManager  = new TerrainManager( masterRenderer, inputListener);
+		terrainManager.bindInputHanlder();
+		return terrainManager;
+	}
+	
 	@Override
 	public void bindInputHanlder() {
-		this.inputListener.addRunnerOnUniquePress(GLFW.GLFW_KEY_SPACE, () -> addTerrain());
+		this.inputListener.getKeyboard().ifPresent(keyboardListener -> {
+			keyboardListener.addRunnerOnUniquePress(GLFW.GLFW_KEY_SPACE, this::addTerrain);
+		});
 		
 	}
 	

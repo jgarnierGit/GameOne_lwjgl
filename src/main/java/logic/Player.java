@@ -8,13 +8,12 @@ import static org.lwjgl.glfw.GLFW.GLFW_KEY_W;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.logging.Level;
 
 import org.lwjglx.util.vector.Vector3f;
 
 import entities.EntityTutos;
 import inputListeners.InputInteractable;
-import inputListeners.InputListeners;
+import inputListeners.PlayerInputListener;
 import modelsLibrary.Terrain3D;
 import modelsManager.Model3D;
 import renderEngine.DisplayManager;
@@ -32,22 +31,31 @@ public class Player extends InputInteractable {
 	private boolean isInAir = false;
 	private EntityTutos entity;
 	
-	public Player(InputListeners inputListener, Model3D model, Vector3f positions, float rotX, float rotY, float rotZ, float scale) {
+	private Player(PlayerInputListener inputListener, Model3D model, Vector3f positions, float rotX, float rotY, float rotZ, float scale) {
 		super(inputListener);
 		entity = new EntityTutos(model, positions, rotX, rotY, rotZ, scale);
 	}
 	
+	public static Player create(PlayerInputListener inputListener, Model3D model, Vector3f positions, float rotX, float rotY, float rotZ, float scale) {
+		Player player = new Player(inputListener,model,positions,rotX,rotY,rotZ,scale);
+		player.bindInputHanlder();
+		return player;
+	}
+	
 	@Override
 	public void bindInputHanlder() {
-		this.inputListener.addRunnerOnPress(GLFW_KEY_W, () -> updateCurrentSpeed(RUN_SPEED));
-		this.inputListener.addRunnerOnPress(GLFW_KEY_S,() -> updateCurrentSpeed(-RUN_SPEED));
-		this.inputListener.addRunnerOnPress(GLFW_KEY_A, () -> updateCurrentTurnSpeed(TURN_FLOAT));
-		this.inputListener.addRunnerOnPress(GLFW_KEY_D, () -> updateCurrentTurnSpeed(-TURN_FLOAT));
-		this.inputListener.addRunnerOnRelease(GLFW_KEY_W, () -> updateCurrentSpeed(0));
-		this.inputListener.addRunnerOnRelease(GLFW_KEY_S, () -> updateCurrentSpeed(0));
-		this.inputListener.addRunnerOnRelease(GLFW_KEY_A, () -> updateCurrentTurnSpeed(0));
-		this.inputListener.addRunnerOnRelease(GLFW_KEY_D, () -> updateCurrentTurnSpeed(0));
-		this.inputListener.addRunnerOnUniquePress(GLFW_KEY_SPACE,() -> jump());
+		this.inputListener.getKeyboard().ifPresent(keyboardListener -> {
+			keyboardListener.addRunnerOnPress(GLFW_KEY_W, () -> updateCurrentSpeed(RUN_SPEED));
+			keyboardListener.addRunnerOnPress(GLFW_KEY_S,() -> updateCurrentSpeed(-RUN_SPEED));
+			keyboardListener.addRunnerOnPress(GLFW_KEY_A, () -> updateCurrentTurnSpeed(TURN_FLOAT));
+			keyboardListener.addRunnerOnPress(GLFW_KEY_D, () -> updateCurrentTurnSpeed(-TURN_FLOAT));
+			keyboardListener.addRunnerOnRelease(GLFW_KEY_W, () -> updateCurrentSpeed(0));
+			keyboardListener.addRunnerOnRelease(GLFW_KEY_S, () -> updateCurrentSpeed(0));
+			keyboardListener.addRunnerOnRelease(GLFW_KEY_A, () -> updateCurrentTurnSpeed(0));
+			keyboardListener.addRunnerOnRelease(GLFW_KEY_D, () -> updateCurrentTurnSpeed(0));
+			keyboardListener.addRunnerOnUniquePress(GLFW_KEY_SPACE, this::jump);
+		});
+		
 	}
 	
 	public void updateCurrentSpeed(float speed) {
