@@ -1,6 +1,7 @@
 package logic;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 import java.util.logging.Level;
@@ -8,14 +9,16 @@ import java.util.logging.Level;
 import org.lwjgl.glfw.GLFW;
 import org.lwjgl.opengl.GL11;
 
+import entities.EntityContainer;
 import inputListeners.InputInteractable;
 import inputListeners.InputListeners;
 import modelsLibrary.RegularFlatTerrain3D;
+import modelsLibrary.SimpleGeom;
 import modelsLibrary.Terrain3D;
 import renderEngine.MasterRenderer;
 import renderEngine.RenderingParameters;
 
-public class TerrainManager extends InputInteractable{
+public class TerrainManager extends InputInteractable implements EntityContainer{
 	List<Terrain3D> terrains = new ArrayList<>();
 	MasterRenderer masterRenderer;
 	Random random;
@@ -28,28 +31,32 @@ public class TerrainManager extends InputInteractable{
 	
 	@Override
 	public void bindInputHanlder() {
-		this.inputListener.addRunnerOnUniquePress(GLFW.GLFW_KEY_S, () -> addTerrain());
+		this.inputListener.addRunnerOnUniquePress(GLFW.GLFW_KEY_SPACE, () -> addTerrain());
 		
 	}
 	
-	private void addTerrain() {
+	public void addTerrain() {
+		float x = random.nextFloat() * 5;
+		float y = random.nextFloat() * 5;
 		float z = random.nextFloat() * 10;
-		RegularFlatTerrain3D terrain = RegularFlatTerrain3D.generateRegular(masterRenderer, "terrain", 10, 0, 0, z);
+		RegularFlatTerrain3D terrain = RegularFlatTerrain3D.generateRegular(masterRenderer, "terrain", 10, x, y, z);
 		setupTerrain(terrain);
 		terrains.add(terrain);
+		prepareForRender();
 	}
 
 	public void initiateTerrain() {
 		RegularFlatTerrain3D terrain = RegularFlatTerrain3D.generateRegular(masterRenderer, "terrain", 10, 0, 0, 0);
 		setupTerrain(terrain);
 		terrains.add(terrain);
+		prepareForRender();
 	}
 	
 	public List<Terrain3D> getTerrains(){
 		return this.terrains;
 	}
 	
-	public void render() {
+	public void prepareForRender() { //TODO try to automate this part.
 		for(Terrain3D terrain : terrains) {
 			masterRenderer.reloadAndprocess(terrain);
 		}
@@ -63,6 +70,13 @@ public class TerrainManager extends InputInteractable{
 		terrainParameters.doNotUseEntities();
 		terrainParameters.setRenderMode(GL11.GL_TRIANGLES);
 		//this.invertNormals();
+	}
+
+	@Override
+	public List<SimpleGeom> getEntitiesGeom() {
+		List<SimpleGeom> geoms = new ArrayList<>();
+		geoms.addAll(this.terrains);
+		return geoms;
 	}
 	
 }

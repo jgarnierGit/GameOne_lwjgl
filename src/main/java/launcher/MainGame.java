@@ -6,11 +6,11 @@ import java.util.List;
 
 import org.lwjglx.util.vector.Vector3f;
 
-import entities.Camera;
 import inputListeners.InputListeners;
 import inputListeners.KeyboardInputListener;
 import inputListeners.MouseInputListener;
 import inputListeners.UserInputHandler;
+import logic.CameraLogic;
 import logic.Player;
 import logic.TerrainManager;
 import models.Monkey;
@@ -26,15 +26,15 @@ public class MainGame {
 		inputHandlers.add(mouseInputHandler);
 		inputHandlers.add(keyboardInputHandler);
 		//TODO document the fact that we need 3D folder and 2D folder in /resources
-		Camera camera = new Camera(mouseInputHandler);
+		CameraLogic camera = new CameraLogic(mouseInputHandler);
 		
 		//TODO specify vertexShaders & FragmentShaders here.
-		MasterRenderer masterRenderer = MasterRenderer.create(camera);
+		MasterRenderer masterRenderer = MasterRenderer.create(camera.getCamera());
 		Monkey monkey = new Monkey(masterRenderer);
 		Player player = new Player(keyboardInputHandler, monkey, new Vector3f(-5,0,0), 0, 0, 0, 1);
 		
 		//TODO create interface Model3D to guide user for minimal structure
-		//camera.attachToEntity(player);
+		camera.attachToEntity(player.getEntity());
 		
 		//TODO put in there while (DisplayManager.isRunning()) { with all logic.
 		GameExecutor gameExecutor = new GameExecutor();
@@ -43,7 +43,15 @@ public class MainGame {
 	//	gameExecutor.render(masterRenderer,player,terrain);
 		terrainGenerator.initiateTerrain();
 		UserInputHandler userInputHandler = UserInputHandler.create();
+		float deltaTime = 0;
 		while (DisplayManager.isRunning()) {
+			deltaTime += DisplayManager.getFrameTimeSeconds();
+			if(deltaTime > 2) {
+				terrainGenerator.addTerrain();
+				deltaTime = 0;
+				camera.centerOverEntities(terrainGenerator.getEntitiesGeom());
+			}
+			
 			userInputHandler.updateUserInputs();
 			for(InputListeners inputHandler : inputHandlers) {
 				inputHandler.listen();
@@ -52,14 +60,15 @@ public class MainGame {
 			cameraYawUpdate = (float) Math.sin(cameraYawUpdate)/5;
 			//camera.updateYaw(cameraYawUpdate);
 			player.move(terrainGenerator.getTerrains());
+			camera.freeFly();
 			masterRenderer.processEntity(player.getEntity());
-			terrainGenerator.render();
 			masterRenderer.render(new ArrayList<>());
 			DisplayManager.updateDisplay();
 		}
 		for(InputListeners inputHandler : inputHandlers) {
 			inputHandler.clear();
 		}
+		camera.cleanEntities();
 		masterRenderer.cleanUp();
 		DisplayManager.closeDisplay();
 	}
