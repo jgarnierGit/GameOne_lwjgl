@@ -6,6 +6,7 @@ import java.util.Random;
 
 import org.lwjgl.glfw.GLFW;
 import org.lwjgl.opengl.GL11;
+import org.lwjglx.util.vector.Vector3f;
 
 import entities.EntityContainer;
 import inputListeners.InputInteractable;
@@ -42,12 +43,10 @@ public class TerrainManager extends InputInteractable implements EntityContainer
 	}
 	
 	public void addTerrain() {
-		float x = random.nextFloat() * 5;
-		float y = random.nextFloat() * 5;
-		float z = random.nextFloat() * 10;
-		RegularFlatTerrain3D terrain = RegularFlatTerrain3D.generateRegular(masterRenderer, "terrain", 10, x, y, z);
-		setupTerrain(terrain);
-		terrains.add(terrain);
+		float x = random.nextFloat() * 50;
+		float y = random.nextFloat() * 100; //elevation
+		float z = random.nextFloat() * 50;
+		terrains.get(0).getRenderingParameters().addEntity(new Vector3f(x,y,z), 0, 0, 0, 1);
 		prepareForRender();
 	}
 
@@ -73,7 +72,6 @@ public class TerrainManager extends InputInteractable implements EntityContainer
 		RenderingParameters terrainParameters = terrain.getRenderingParameters();
 		// TODO hide from this interface.
 		//terrainParameters.disableRenderOptions();
-		terrainParameters.doNotUseEntities();
 		terrainParameters.setRenderMode(GL11.GL_TRIANGLES);
 		//this.invertNormals();
 	}
