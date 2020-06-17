@@ -3,11 +3,14 @@ package launcher;
 import java.io.IOException;
 import java.util.ArrayList;
 
+import org.lwjgl.glfw.GLFW;
 import org.lwjglx.util.vector.Vector3f;
 
+import camera.behavior.CameraFreeFly;
 import inputListeners.PlayerInputListener;
 import inputListeners.PlayerInputListenerBuilder;
-import logic.CameraLogic;
+import logic.CameraLockedToEntities;
+import logic.CameraManager;
 import logic.Player;
 import logic.TerrainManager;
 import models.Monkey;
@@ -20,7 +23,7 @@ public class MainGame {
 		PlayerInputListener playerInputListener = PlayerInputListenerBuilder.create().addMouseInputListener()
 				.addKeyboardInputListener().build();
 		//TODO document the fact that we need 3D folder and 2D folder in /resources
-		CameraLogic camera = CameraLogic.create(playerInputListener);
+		CameraManager camera = CameraManager.create(playerInputListener);
 		
 		//TODO specify vertexShaders & FragmentShaders here.
 		MasterRenderer masterRenderer = MasterRenderer.create(camera.getCamera());
@@ -28,7 +31,6 @@ public class MainGame {
 		Player player = Player.create(playerInputListener, monkey, new Vector3f(-5,0,0), 0, 0, 0, 1);
 		
 		//TODO create interface Model3D to guide user for minimal structure
-		camera.attachToEntity(player.getEntity());
 		
 		//TODO put in there while (DisplayManager.isRunning()) { with all logic.
 		GameExecutor gameExecutor = new GameExecutor();
@@ -38,26 +40,33 @@ public class MainGame {
 		terrainGenerator.initiateTerrain();
 		
 		float deltaTime = 0;
+		CameraLockedToEntities cameraLogic = camera.getLockedToEntityCamera();
+		CameraFreeFly cameraFreeFly = camera.getFreeFlyCamera();
 		while (DisplayManager.isRunning()) {
-			deltaTime += DisplayManager.getFrameTimeSeconds();
-			if(deltaTime > 2) {
-				terrainGenerator.addTerrain();
-				deltaTime = 0;
-				camera.centerOverEntities(terrainGenerator.getEntitiesGeom());
+			camera.updateViewMatrix();
+			
+			
+				deltaTime += DisplayManager.getFrameTimeSeconds();
+				if(deltaTime > 2) {
+					terrainGenerator.addTerrain();
+					deltaTime = 0;
+					if(camera.getActiveCameraBehavior() instanceof CameraLockedToEntities) {
+					cameraLogic.centerOverEntities(terrainGenerator.getEntitiesGeom());
+				}
 			}
+			
+			camera.update();
 			playerInputListener.update();
 
 			float cameraYawUpdate = (float) DisplayManager.getCurrentTime() / 400;
 			cameraYawUpdate = (float) Math.sin(cameraYawUpdate)/5;
 			//camera.updateYaw(cameraYawUpdate);
 			player.move(terrainGenerator.getTerrains());
-			camera.freeFly();
 			masterRenderer.processEntity(player.getEntity());
 			masterRenderer.render(new ArrayList<>());
 			DisplayManager.updateDisplay();
 		}
 		playerInputListener.clear();
-		camera.cleanEntities();
 		masterRenderer.cleanUp();
 		DisplayManager.closeDisplay();
 	}
