@@ -8,10 +8,8 @@ import java.util.logging.Level;
 import org.lwjglx.util.vector.Vector3f;
 
 import camera.Camera;
-import camera.CameraBehavior;
 import camera.CameraEntity;
 import entities.Entity;
-import inputListeners.InputInteractable;
 import inputListeners.PlayerInputListener;
 import modelsLibrary.SimpleGeom;
 import modelsLibrary.Terrain3D;

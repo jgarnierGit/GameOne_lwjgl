@@ -1,6 +1,5 @@
 package logic;
 
-import org.apache.commons.lang3.NotImplementedException;
 import org.lwjgl.glfw.GLFW;
 import org.lwjglx.util.vector.Vector3f;
 
@@ -10,6 +9,7 @@ import camera.behavior.CameraFreeFly;
 import inputListeners.InputInteractable;
 import inputListeners.PlayerInputListener;
 import renderEngine.GameBehavior;
+import toolbox.CoordinatesSystemManager;
 
 public class CameraManager extends InputInteractable implements GameBehavior{
 
@@ -18,23 +18,23 @@ public class CameraManager extends InputInteractable implements GameBehavior{
 	private CameraFreeFly cameraFreeFly;
 	private CameraLockedToEntities cameraLockedToEntities;
 
-	private CameraManager(PlayerInputListener inputListener) {
+	private CameraManager(PlayerInputListener inputListener, CameraEntity camera) {
 		super(inputListener);
-		camera = new CameraEntity(new Vector3f(0, 10, 50), 0, 20, 0);
+		this.camera = camera;
 		cameraBehavior = null;
 		cameraFreeFly = null;
 		cameraLockedToEntities = null;
 	}
 
-	public static CameraManager create(PlayerInputListener inputListener) {
-		CameraManager cameraManager = new CameraManager(inputListener);
+	public static CameraManager create(PlayerInputListener inputListener, Vector3f position, int pitch, int yaw) {
+		CameraManager cameraManager = new CameraManager(inputListener, new CameraEntity(position, pitch, yaw, 0, CoordinatesSystemManager.create()));
 		cameraManager.bindInputHanlder();
 		return cameraManager;
 	}
 	
-	public CameraFreeFly getFreeFlyCamera(int glfwPitch,int  glfwYaw) {
+	public CameraFreeFly getFreeFlyCamera(int glfwRotateInput,int  glfwDeltaTranslation) {
 		if(cameraFreeFly == null) {
-			cameraFreeFly = CameraFreeFly.create(inputListener, camera, glfwPitch, glfwYaw);
+			cameraFreeFly = CameraFreeFly.create(inputListener, camera, glfwRotateInput, glfwDeltaTranslation);
 		}
 		cameraBehavior = cameraFreeFly;
 		return cameraFreeFly;
@@ -42,7 +42,7 @@ public class CameraManager extends InputInteractable implements GameBehavior{
 	
 	public CameraFreeFly getFreeFlyCamera() {
 		if(cameraFreeFly == null) {
-			cameraFreeFly = CameraFreeFly.create(inputListener, camera, GLFW.GLFW_MOUSE_BUTTON_MIDDLE, GLFW.GLFW_MOUSE_BUTTON_MIDDLE);
+			cameraFreeFly = CameraFreeFly.create(inputListener, camera, GLFW.GLFW_MOUSE_BUTTON_MIDDLE, GLFW.GLFW_MOUSE_BUTTON_LEFT);
 		}
 		cameraBehavior = cameraFreeFly;
 		return cameraFreeFly;
@@ -67,6 +67,7 @@ public class CameraManager extends InputInteractable implements GameBehavior{
 		});
 	}
 
+	//TODO add unbindInputHandler on option when switching cameraBehavior.
 	private void switchMovingSystem() {
 		if(cameraBehavior instanceof CameraLockedToEntities) {
 			cameraBehavior = getFreeFlyCamera();

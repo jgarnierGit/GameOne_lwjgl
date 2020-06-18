@@ -3,7 +3,6 @@ package launcher;
 import java.io.IOException;
 import java.util.ArrayList;
 
-import org.lwjgl.glfw.GLFW;
 import org.lwjglx.util.vector.Vector3f;
 
 import camera.behavior.CameraFreeFly;
@@ -23,12 +22,12 @@ public class MainGame {
 		PlayerInputListener playerInputListener = PlayerInputListenerBuilder.create().addMouseInputListener()
 				.addKeyboardInputListener().build();
 		//TODO document the fact that we need 3D folder and 2D folder in /resources
-		CameraManager camera = CameraManager.create(playerInputListener);
+		CameraManager camera = CameraManager.create(playerInputListener, new Vector3f(-20,20,50), 20,45);
 		
 		//TODO specify vertexShaders & FragmentShaders here.
 		MasterRenderer masterRenderer = MasterRenderer.create(camera.getCamera());
 		Monkey monkey = new Monkey(masterRenderer);
-		Player player = Player.create(playerInputListener, monkey, new Vector3f(-5,0,0), 0, 0, 0, 1);
+		Player player = Player.create(playerInputListener, monkey, new Vector3f(-5,0,0), 0, 90, 0, 1);
 		
 		//TODO create interface Model3D to guide user for minimal structure
 		
