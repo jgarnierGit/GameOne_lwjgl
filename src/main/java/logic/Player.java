@@ -11,7 +11,9 @@ import java.util.Optional;
 
 import org.lwjglx.util.vector.Vector3f;
 
+import entities.Entity;
 import entities.EntityTutos;
+import entities.SimpleEntity;
 import inputListeners.InputInteractable;
 import inputListeners.PlayerInputListener;
 import modelsLibrary.Terrain3D;
@@ -23,30 +25,36 @@ public class Player extends InputInteractable {
 	private static final float TURN_FLOAT = 160;
 	private static final float GRAVITY = 50;
 	private static final float JUMP_POWER = 30;
-	
+
 	private float currentSpeed = 0;
 	private float currentTurnSpeed = 0;
 	private float upwardSpeed = 0;
-	private float falling = 0;
+	private float fallingTimeout = 0;
+	private boolean jumping = false;
 	private boolean isInAir = false;
 	private EntityTutos entity;
-	
-	private Player(PlayerInputListener inputListener, Model3D model, Vector3f positions, float rotX, float rotY, float rotZ, float scale) {
+	private Entity respawner;
+
+	private Player(PlayerInputListener inputListener, Model3D model, Vector3f positions, float rotX, float rotY,
+			float rotZ, float scale) {
 		super(inputListener);
 		entity = new EntityTutos(model, positions, rotX, rotY, rotZ, scale);
+
 	}
-	
-	public static Player create(PlayerInputListener inputListener, Model3D model, Vector3f positions, float rotX, float rotY, float rotZ, float scale) {
-		Player player = new Player(inputListener,model,positions,rotX,rotY,rotZ,scale);
+
+	public static Player create(PlayerInputListener inputListener, Model3D model, Vector3f positions, float rotX,
+			float rotY, float rotZ, float scale) {
+		Player player = new Player(inputListener, model, positions, rotX, rotY, rotZ, scale);
 		player.bindInputHanlder();
+		player.respawner = new SimpleEntity(new Vector3f(0, 10, 0), rotX, rotY, rotZ, scale);
 		return player;
 	}
-	
+
 	@Override
 	public void bindInputHanlder() {
 		this.inputListener.getKeyboard().ifPresent(keyboardListener -> {
 			keyboardListener.addRunnerOnPress(GLFW_KEY_W, () -> updateCurrentSpeed(RUN_SPEED));
-			keyboardListener.addRunnerOnPress(GLFW_KEY_S,() -> updateCurrentSpeed(-RUN_SPEED));
+			keyboardListener.addRunnerOnPress(GLFW_KEY_S, () -> updateCurrentSpeed(-RUN_SPEED));
 			keyboardListener.addRunnerOnPress(GLFW_KEY_A, () -> updateCurrentTurnSpeed(TURN_FLOAT));
 			keyboardListener.addRunnerOnPress(GLFW_KEY_D, () -> updateCurrentTurnSpeed(-TURN_FLOAT));
 			keyboardListener.addRunnerOnRelease(GLFW_KEY_W, () -> updateCurrentSpeed(0));
@@ -55,73 +63,108 @@ public class Player extends InputInteractable {
 			keyboardListener.addRunnerOnRelease(GLFW_KEY_D, () -> updateCurrentTurnSpeed(0));
 			keyboardListener.addRunnerOnUniquePress(GLFW_KEY_SPACE, this::jump);
 		});
-		
+
 	}
-	
+
 	public void updateCurrentSpeed(float speed) {
 		this.currentSpeed = speed;
 	}
-	
+
 	public void updateCurrentTurnSpeed(float turn) {
-			this.currentTurnSpeed = turn;
+		this.currentTurnSpeed = turn;
 	}
-	
+
+	public void respawning() {
+		jumping=false;
+		entity.setPositions(
+				new Vector3f(respawner.getPositions().x, respawner.getPositions().y+0.5f, respawner.getPositions().z));
+		upwardSpeed = 0;
+		fallingTimeout = 0;
+	}
+
 	private void jump() {
-		if(!isInAir) {
+		if (!isInAir) {
 			this.upwardSpeed = JUMP_POWER;
 			isInAir = true;
+			jumping = true;
 		}
 	}
-	
+
 	public EntityTutos getEntity() {
 		return this.entity;
 	}
-	
+
 	public void move(List<Terrain3D> terrains) {
-		//checkInputs();
 		entity.increaseRotation(0, currentTurnSpeed * DisplayManager.getFrameTimeSeconds(), 0);
 		float distance = currentSpeed * DisplayManager.getFrameTimeSeconds();
 		float dx = (float) (distance * Math.sin(Math.toRadians(entity.getRotY())));
 		float dz = (float) (distance * Math.cos(Math.toRadians(entity.getRotY())));
 		entity.increasePosition(dx, 0, dz);
-		upwardSpeed -= GRAVITY * DisplayManager.getFrameTimeSeconds();
-		entity.increasePosition(0, upwardSpeed * DisplayManager.getFrameTimeSeconds(), 0);
-		
-		// TODO improve this as specific developpment for GameOne: many terrain can overlap with different y
-		Optional<Float> terrainHeight = Optional.empty();
-		for(Terrain3D terrain : terrains) {
-			terrainHeight = terrain.getHeight(entity.getPositions().x, entity.getPositions().z);
-			if(terrainHeight.isPresent()) {
-				break;
+		if (isInAir) {
+			upwardSpeed -= GRAVITY * DisplayManager.getFrameTimeSeconds();
+			if (upwardSpeed <= 0) {
+				jumping = false;
 			}
+			entity.increasePosition(0, upwardSpeed * DisplayManager.getFrameTimeSeconds(), 0);
 		}
-		if(terrainHeight.isPresent()) {
-			float elevation = terrainHeight.get();
-			if(entity.getPositions().y < elevation) {
+		updateJumpingStatus(terrains);
+	}
+
+	private void updateJumpingStatus(List<Terrain3D> terrains) {
+		Optional<Entity> nearestTerrain = getActiveTerrain(terrains);
+		Optional<Float> currentHeightTerrain = Optional.empty();
+		if (nearestTerrain.isPresent()) {
+			currentHeightTerrain = Optional.of(nearestTerrain.get().getPositions().y);
+		}
+		if (currentHeightTerrain.isPresent()) {
+			float elevation = currentHeightTerrain.get();
+			if (!jumping && Math.abs(elevation - entity.getPositions().y) < 0.5) {
+				setRespawner(nearestTerrain.get());
 				upwardSpeed = 0;
 				entity.getPositions().y = elevation;
 				isInAir = false;
-				falling = 0;
+				fallingTimeout = 0;
+			}
+		} else {
+			isInAir = true;
+			fallingTimeout += DisplayManager.getFrameTimeSeconds();
+			if (fallingTimeout > 3) {
+				respawning();
 			}
 		}
-		else {
-			falling += DisplayManager.getFrameTimeSeconds();
-			if(falling > 3) {
-				entity.setPositions(new Vector3f(0,10,0));
-			}
-		}
-		
 	}
-	
 
-	/** FIXME combo are not allowed in this system.
-	private void checkInputs() {
-			if(!UserInputHandler.activateOnPress(GLFW_KEY_W) && !UserInputHandler.activateOnPress(GLFW_KEY_S)){
-				currentSpeed = 0;
+	private Optional<Entity> getActiveTerrain(List<Terrain3D> terrains) {
+		Optional<Float> activeHeight = Optional.empty();
+		// TODO shortcut to implement, test with active terrain if coordinates still
+		// match.
+		for (Terrain3D terrain : terrains) {
+			/**
+			 * Optional<Entity> nearestTerrain =
+			 * SpatialComparator.getNearestEntityFromDirection(entity.getPositions(),Direction.BOTTOM,
+			 * terrain.getRenderingParameters().getEntities());
+			 * if(!nearestTerrain.isPresent()) { continue; }
+			 **/
+			Optional<Float> terrainHeight = terrain.getHeight(entity.getPositions().x, entity.getPositions().z);
+			if (terrainHeight.isPresent() && terrainHeight.get() <= entity.getPositions().y) {
+				// logger.log(Level.INFO, "upwardspeed :"+ upwardSpeed +" terrain : " +
+				// terrainHeight.get() + " player" + entity.getPositions());
+				if (!activeHeight.isPresent()) {
+					activeHeight = terrainHeight;
+				} else {
+					if (activeHeight.get() < terrainHeight.get()) {
+						activeHeight = terrainHeight;
+					}
+				}
 			}
-			if(!UserInputHandler.activateOnPress(GLFW_KEY_A) && !UserInputHandler.activateOnPress(GLFW_KEY_D)){
-				currentTurnSpeed = 0;
-			}
+		}
+		return !activeHeight.isPresent() ? Optional.empty()
+				: Optional.of(new SimpleEntity(
+						new Vector3f(entity.getPositions().x, activeHeight.get(), entity.getPositions().z),
+						entity.getRotX(), entity.getRotY(), entity.getRotZ(), 1));
 	}
-**/
+
+	public void setRespawner(Entity entity) {
+		respawner = entity;
+	}
 }
