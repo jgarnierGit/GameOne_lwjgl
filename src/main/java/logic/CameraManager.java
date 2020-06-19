@@ -1,5 +1,7 @@
 package logic;
 
+import java.util.Optional;
+
 import org.lwjgl.glfw.GLFW;
 import org.lwjglx.util.vector.Vector3f;
 
@@ -20,6 +22,8 @@ public class CameraManager extends InputInteractable implements GameBehavior{
 	private CameraFreeFly cameraFreeFly;
 	private CameraCenterOverEntities cameraCenterOverEntities;
 	private CameraLockedToEntity cameraLockedToEntity;
+	
+	private Optional<Entity> lockedEntity;
 
 	private CameraManager(PlayerInputListener inputListener, CameraEntity camera) {
 		super(inputListener);
@@ -29,6 +33,7 @@ public class CameraManager extends InputInteractable implements GameBehavior{
 		cameraFreeFly = null;
 		cameraCenterOverEntities = null;
 		cameraLockedToEntity = null;
+		lockedEntity = Optional.empty();
 	}
 
 	public static CameraManager create(PlayerInputListener inputListener, Vector3f position, int pitch, int yaw) {
@@ -53,6 +58,7 @@ public class CameraManager extends InputInteractable implements GameBehavior{
 		if(cameraFreeFly == null) {
 			cameraFreeFly = CameraFreeFly.create(inputListener, camera, glfwRotateInput, glfwDeltaTranslation);
 		}
+		cameraFreeFly.stopMoving();
 		switchBehavior(cameraFreeFly);
 		return cameraFreeFly;
 	}
@@ -61,6 +67,7 @@ public class CameraManager extends InputInteractable implements GameBehavior{
 		if(cameraFreeFly == null) {
 			cameraFreeFly = CameraFreeFly.create(inputListener, camera, GLFW.GLFW_MOUSE_BUTTON_MIDDLE, GLFW.GLFW_MOUSE_BUTTON_LEFT);
 		}
+		cameraFreeFly.stopMoving();
 		switchBehavior(cameraFreeFly);
 		return cameraFreeFly;
 	}
@@ -80,6 +87,8 @@ public class CameraManager extends InputInteractable implements GameBehavior{
 		else {
 			cameraLockedToEntity.lockToEntity(entity);
 		}
+		lockedEntity = Optional.of(entity);
+		cameraLockedToEntity.stopMoving();
 		switchBehavior(cameraLockedToEntity);
 		return cameraLockedToEntity;
 	}
@@ -96,12 +105,16 @@ public class CameraManager extends InputInteractable implements GameBehavior{
 		return this.camera;
 	}
 
+	// weird switch... I want it to switch over allowed cameraBehavior.
 	private void switchMovingSystem() {
-		if(cameraBehavior instanceof CameraCenterOverEntities) {
+		if(cameraBehavior instanceof CameraLockedToEntity) {
 			cameraBehavior = getFreeFlyCamera();
 		}
 		else {
-			cameraBehavior = getCenterOverEntitiesCamera();
+			if(lockedEntity.isPresent()) {
+				cameraBehavior = getCameraLockedToEntity(lockedEntity.get());
+			}
+			
 		}
 	}
 

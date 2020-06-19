@@ -46,6 +46,11 @@ public class CameraCenterOverEntities extends Camera{
 		//nothing to unbind
 	}
 	
+	@Override
+	public void stopMoving() {
+		//nothing to reset
+	}
+	
 	/**
 	 * TODO find an implementation to allow this one or freeFly but not together.
 	 * @param terrains
@@ -123,5 +128,4 @@ public class CameraCenterOverEntities extends Camera{
 			this.entities.addAll(geom.getRenderingParameters().getEntities());
 		}
 	}
-
 }

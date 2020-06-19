@@ -40,11 +40,15 @@ public class MainGame {
 		
 		float deltaTime = 0;
 		//FIXME weird to use getter to create cameraBehavior, and maybe not have to use it.
-		CameraCenterOverEntities cameraLogic = camera.getCenterOverEntitiesCamera();
-		CameraFreeFly cameraFreeFly = camera.getFreeFlyCamera();
+		//CameraCenterOverEntities cameraLogic = camera.getCenterOverEntitiesCamera();
+		camera.getFreeFlyCamera();
 		camera.getCameraLockedToEntity(player.getEntity());
 		while (DisplayManager.isRunning()) {
+			playerInputListener.update();
 			camera.update();
+			//FIXME maybe it was a mistake to update once per frame viewMatrix?
+			// need to find a way to update it once every transformation on camera are done. (includes InputListener / gameLogic...)
+			//some inputListener need viewMatrix value. (aka freeFlyCamera.)
 			camera.updateViewMatrix();
 			
 			
@@ -53,16 +57,16 @@ public class MainGame {
 					terrainGenerator.addTerrain();
 					deltaTime = 0;
 					if(camera.getActiveCameraBehavior() instanceof CameraCenterOverEntities) {
-					cameraLogic.centerOverEntities(terrainGenerator.getEntitiesGeom());
+					//cameraLogic.centerOverEntities(terrainGenerator.getEntitiesGeom());
 				}
 			}
 
-			playerInputListener.update();
+			
 
 			float cameraYawUpdate = (float) DisplayManager.getCurrentTime() / 400;
 			cameraYawUpdate = (float) Math.sin(cameraYawUpdate)/5;
 			//camera.updateYaw(cameraYawUpdate);
-			player.move(terrainGenerator.getTerrains());
+			player.move(terrainGenerator.getTerrains(),camera);
 			masterRenderer.processEntity(player.getEntity());
 			masterRenderer.render(new ArrayList<>());
 			DisplayManager.updateDisplay();

@@ -6,6 +6,7 @@ import static org.lwjgl.glfw.GLFW.GLFW_KEY_S;
 import static org.lwjgl.glfw.GLFW.GLFW_KEY_SPACE;
 import static org.lwjgl.glfw.GLFW.GLFW_KEY_W;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -20,6 +21,8 @@ import inputListeners.PlayerInputListener;
 import modelsLibrary.Terrain3D;
 import modelsManager.Model3D;
 import renderEngine.DisplayManager;
+import utils.Direction;
+import utils.SpatialComparator;
 
 public class Player extends InputInteractable {
 	private static final float RUN_SPEED = 20;
@@ -79,29 +82,29 @@ public class Player extends InputInteractable {
 	}
 
 	private void initKeyboarRunnable() {
-		if(increaseSpeed == null) {
+		if (increaseSpeed == null) {
 			increaseSpeed = () -> updateCurrentSpeed(RUN_SPEED);
 		}
-		if(decreaseSpeed == null) {
+		if (decreaseSpeed == null) {
 			decreaseSpeed = () -> updateCurrentSpeed(-RUN_SPEED);
 		}
-		if(increaseTurn == null) {
+		if (increaseTurn == null) {
 			increaseTurn = () -> updateCurrentTurnSpeed(TURN_FLOAT);
 		}
-		if(decreaseTurn == null) {
+		if (decreaseTurn == null) {
 			decreaseTurn = () -> updateCurrentTurnSpeed(-TURN_FLOAT);
 		}
-		if(resetSpeed == null) {
+		if (resetSpeed == null) {
 			resetSpeed = () -> updateCurrentSpeed(0);
 		}
-		if(resetTurn == null) {
+		if (resetTurn == null) {
 			resetTurn = () -> updateCurrentTurnSpeed(0);
 		}
 	}
 
 	@Override
 	public void unbindInputHanlder() {
-		//nothing to unbind
+		// nothing to unbind
 	}
 
 	public void updateCurrentSpeed(float speed) {
@@ -112,8 +115,9 @@ public class Player extends InputInteractable {
 		this.currentTurnSpeed = turn;
 	}
 
-	public void respawning() {
+	public void respawning(CameraManager camera) {
 		jumping = false;
+		camera.getCameraLockedToEntity(entity);
 		entity.setPositions(new Vector3f(respawner.getPositions().x, respawner.getPositions().y + 0.5f,
 				respawner.getPositions().z));
 		upwardSpeed = 0;
@@ -121,7 +125,7 @@ public class Player extends InputInteractable {
 	}
 
 	private void jump() {
-		if (!isInAir) {
+		if (!isInAir || fallingTimeout < 0.25) {
 			this.upwardSpeed = JUMP_POWER;
 			isInAir = true;
 			jumping = true;
@@ -132,29 +136,32 @@ public class Player extends InputInteractable {
 		return this.entity;
 	}
 
-	public void move(List<Terrain3D> terrains) {
+	public void move(List<Terrain3D> terrains, CameraManager camera) {
 		entity.increaseRotation(0, currentTurnSpeed * DisplayManager.getFrameTimeSeconds(), 0);
 		float distance = currentSpeed * DisplayManager.getFrameTimeSeconds();
 		float dx = (float) (distance * Math.sin(Math.toRadians(entity.getRotY())));
 		float dz = (float) (distance * Math.cos(Math.toRadians(entity.getRotY())));
 		entity.increasePosition(dx, 0, dz);
+		float finalspeed = 0.5f;
 		if (isInAir) {
 			upwardSpeed -= GRAVITY * DisplayManager.getFrameTimeSeconds();
 			if (upwardSpeed <= 0) {
 				jumping = false;
 			}
-			float finalspeed = upwardSpeed * DisplayManager.getFrameTimeSeconds();
+			finalspeed = upwardSpeed * DisplayManager.getFrameTimeSeconds();
 			entity.increasePosition(0, finalspeed, 0);
 		}
-		updateJumpingStatus(terrains);
+		updateJumpingStatus(terrains, camera, Math.abs(finalspeed));
 	}
 
-	private void updateJumpingStatus(List<Terrain3D> terrains) {
+	private void updateJumpingStatus(List<Terrain3D> terrains, CameraManager camera, float finalspeed) {
 		Optional<Entity> nearestTerrain = getActiveTerrain(terrains);
 		if (nearestTerrain.isPresent()) {
 			Entity terrain = nearestTerrain.get();
 			float elevation = terrain.getPositions().y;
-			if (!jumping && Math.abs(elevation - entity.getPositions().y) < 0.5) {
+			//avoid passing through at high velocity
+			finalspeed = finalspeed < 0.5f ? (float) 0.5 : finalspeed;
+			if (!jumping && Math.abs(elevation - entity.getPositions().y) < finalspeed) {
 				setRespawner(terrain);
 				upwardSpeed = 0;
 				entity.getPositions().y = elevation;
@@ -163,11 +170,31 @@ public class Player extends InputInteractable {
 				return;
 			}
 		}
+		testIsFallingOutOfWorld(entity.getPositions(), camera, terrains);
+	}
+
+	private void testIsFallingOutOfWorld(Vector3f worldPosition, CameraManager camera, List<Terrain3D> terrains) {
+		if (fallingTimeout == 0) {
+			List<Entity> filteredTerrainEntities = new ArrayList<>();
+			for (Terrain3D terrain : terrains) {
+				filteredTerrainEntities.addAll(SpatialComparator.filterEntitiesByDirection(worldPosition,
+						Direction.BOTTOM, terrain.getRenderingParameters().getEntities()));
+			}
+			if (filteredTerrainEntities.isEmpty()) {
+				// init falling
+				camera.getFreeFlyCamera();
+				isInAir = true;
+				fallingTimeout += DisplayManager.getFrameTimeSeconds();
+			} else {
+				isInAir = true;
+				return;
+			}
+		}
+
 		// in any other case player is falling.
-		isInAir = true;
 		fallingTimeout += DisplayManager.getFrameTimeSeconds();
 		if (fallingTimeout > 3) {
-			respawning();
+			respawning(camera);
 		}
 	}
 
@@ -176,25 +203,10 @@ public class Player extends InputInteractable {
 		// TODO shortcut to implement, test with active terrain if coordinates still
 		// match.
 		for (Terrain3D terrain : terrains) {
-			/**
-			 * Optional<Entity> nearestTerrain =
-			 * SpatialComparator.getNearestEntityFromDirection(entity.getPositions(),
-			 * Direction.BOTTOM, terrain.getRenderingParameters().getEntities()); if
-			 * (!nearestTerrain.isPresent()) { continue; }
-			 **/
-			/**
-			 * Will be usefull for more complex terrain. not Flat terrain;
-			 * Optional<Vector3f> terrainHeight =
-			 * SpatialComparator.getProjectionOverEntity(entity.getPositions(),
-			 * SpatialComparator.Y_AXIS, terrain.getFaces(),
-			 * nearestTerrain.get().getPositions());
-			 */
-
 			Optional<Float> terrainHeight = terrain.getHeight(entity.getPositions());
 			if (!terrainHeight.isPresent()) {
 				continue;
 			}
-			// terrain.getHeight(entity.getPositions().x, entity.getPositions().z);
 			Float terrainMeasure = terrainHeight.get();
 			if (terrainMeasure <= entity.getPositions().y) {
 				if (!activeHeight.isPresent()) {
