@@ -34,6 +34,7 @@ public class Player extends InputInteractable {
 	private float currentTurnSpeed = 0;
 	private float upwardSpeed = 0;
 	private float fallingTimeout = 0;
+	private float jumpingStillAllowed = 0;
 	private boolean jumping = false;
 	private boolean isInAir = false;
 	private EntityTutos entity;
@@ -125,7 +126,7 @@ public class Player extends InputInteractable {
 	}
 
 	private void jump() {
-		if (!isInAir || fallingTimeout < 0.25) {
+		if (!isInAir || (!jumping && jumpingStillAllowed < 0.5)) {
 			this.upwardSpeed = JUMP_POWER;
 			isInAir = true;
 			jumping = true;
@@ -145,11 +146,15 @@ public class Player extends InputInteractable {
 		float finalspeed = 0.5f;
 		if (isInAir) {
 			upwardSpeed -= GRAVITY * DisplayManager.getFrameTimeSeconds();
+			jumpingStillAllowed += DisplayManager.getFrameTimeSeconds();
 			if (upwardSpeed <= 0) {
 				jumping = false;
 			}
 			finalspeed = upwardSpeed * DisplayManager.getFrameTimeSeconds();
 			entity.increasePosition(0, finalspeed, 0);
+		}
+		else {
+			jumpingStillAllowed = 0;
 		}
 		updateJumpingStatus(terrains, camera, Math.abs(finalspeed));
 	}
