@@ -15,6 +15,7 @@ import entities.Entity;
 import entities.EntityTutos;
 import entities.SimpleEntity;
 import inputListeners.InputInteractable;
+import inputListeners.KeyboardInputListener;
 import inputListeners.PlayerInputListener;
 import modelsLibrary.Terrain3D;
 import modelsManager.Model3D;
@@ -34,12 +35,23 @@ public class Player extends InputInteractable {
 	private boolean isInAir = false;
 	private EntityTutos entity;
 	private Entity respawner;
+	private Runnable increaseSpeed;
+	private Runnable decreaseSpeed;
+	private Runnable increaseTurn;
+	private Runnable decreaseTurn;
+	private Runnable resetSpeed;
+	private Runnable resetTurn;
 
 	private Player(PlayerInputListener inputListener, Model3D model, Vector3f positions, float rotX, float rotY,
 			float rotZ, float scale) {
 		super(inputListener);
 		entity = new EntityTutos(model, positions, rotX, rotY, rotZ, scale);
-
+		increaseSpeed = null;
+		decreaseSpeed = null;
+		increaseTurn = null;
+		decreaseTurn = null;
+		resetSpeed = null;
+		resetTurn = null;
 	}
 
 	public static Player create(PlayerInputListener inputListener, Model3D model, Vector3f positions, float rotX,
@@ -53,17 +65,43 @@ public class Player extends InputInteractable {
 	@Override
 	public void bindInputHanlder() {
 		this.inputListener.getKeyboard().ifPresent(keyboardListener -> {
-			keyboardListener.addRunnerOnPress(GLFW_KEY_W, () -> updateCurrentSpeed(RUN_SPEED));
-			keyboardListener.addRunnerOnPress(GLFW_KEY_S, () -> updateCurrentSpeed(-RUN_SPEED));
-			keyboardListener.addRunnerOnPress(GLFW_KEY_A, () -> updateCurrentTurnSpeed(TURN_FLOAT));
-			keyboardListener.addRunnerOnPress(GLFW_KEY_D, () -> updateCurrentTurnSpeed(-TURN_FLOAT));
-			keyboardListener.addRunnerOnRelease(GLFW_KEY_W, () -> updateCurrentSpeed(0));
-			keyboardListener.addRunnerOnRelease(GLFW_KEY_S, () -> updateCurrentSpeed(0));
-			keyboardListener.addRunnerOnRelease(GLFW_KEY_A, () -> updateCurrentTurnSpeed(0));
-			keyboardListener.addRunnerOnRelease(GLFW_KEY_D, () -> updateCurrentTurnSpeed(0));
+			initKeyboarRunnable();
+			keyboardListener.addRunnerOnPress(GLFW_KEY_W, increaseSpeed);
+			keyboardListener.addRunnerOnPress(GLFW_KEY_S, decreaseSpeed);
+			keyboardListener.addRunnerOnPress(GLFW_KEY_A, increaseTurn);
+			keyboardListener.addRunnerOnPress(GLFW_KEY_D, decreaseTurn);
+			keyboardListener.addRunnerOnRelease(GLFW_KEY_W, resetSpeed);
+			keyboardListener.addRunnerOnRelease(GLFW_KEY_S, resetSpeed);
+			keyboardListener.addRunnerOnRelease(GLFW_KEY_A, resetTurn);
+			keyboardListener.addRunnerOnRelease(GLFW_KEY_D, resetTurn);
 			keyboardListener.addRunnerOnUniquePress(GLFW_KEY_SPACE, this::jump);
 		});
+	}
 
+	private void initKeyboarRunnable() {
+		if(increaseSpeed == null) {
+			increaseSpeed = () -> updateCurrentSpeed(RUN_SPEED);
+		}
+		if(decreaseSpeed == null) {
+			decreaseSpeed = () -> updateCurrentSpeed(-RUN_SPEED);
+		}
+		if(increaseTurn == null) {
+			increaseTurn = () -> updateCurrentTurnSpeed(TURN_FLOAT);
+		}
+		if(decreaseTurn == null) {
+			decreaseTurn = () -> updateCurrentTurnSpeed(-TURN_FLOAT);
+		}
+		if(resetSpeed == null) {
+			resetSpeed = () -> updateCurrentSpeed(0);
+		}
+		if(resetTurn == null) {
+			resetTurn = () -> updateCurrentTurnSpeed(0);
+		}
+	}
+
+	@Override
+	public void unbindInputHanlder() {
+		//nothing to unbind
 	}
 
 	public void updateCurrentSpeed(float speed) {
@@ -105,7 +143,8 @@ public class Player extends InputInteractable {
 			if (upwardSpeed <= 0) {
 				jumping = false;
 			}
-			entity.increasePosition(0, upwardSpeed * DisplayManager.getFrameTimeSeconds(), 0);
+			float finalspeed = upwardSpeed * DisplayManager.getFrameTimeSeconds();
+			entity.increasePosition(0, finalspeed, 0);
 		}
 		updateJumpingStatus(terrains);
 	}

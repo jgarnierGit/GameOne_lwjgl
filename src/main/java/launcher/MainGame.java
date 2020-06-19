@@ -8,7 +8,7 @@ import org.lwjglx.util.vector.Vector3f;
 import camera.behavior.CameraFreeFly;
 import inputListeners.PlayerInputListener;
 import inputListeners.PlayerInputListenerBuilder;
-import logic.CameraLockedToEntities;
+import logic.CameraCenterOverEntities;
 import logic.CameraManager;
 import logic.Player;
 import logic.TerrainManager;
@@ -39,9 +39,12 @@ public class MainGame {
 		terrainGenerator.initiateTerrain();
 		
 		float deltaTime = 0;
-		CameraLockedToEntities cameraLogic = camera.getLockedToEntityCamera();
+		//FIXME weird to use getter to create cameraBehavior, and maybe not have to use it.
+		CameraCenterOverEntities cameraLogic = camera.getCenterOverEntitiesCamera();
 		CameraFreeFly cameraFreeFly = camera.getFreeFlyCamera();
+		camera.getCameraLockedToEntity(player.getEntity());
 		while (DisplayManager.isRunning()) {
+			camera.update();
 			camera.updateViewMatrix();
 			
 			
@@ -49,12 +52,11 @@ public class MainGame {
 				if(deltaTime > 2) {
 					terrainGenerator.addTerrain();
 					deltaTime = 0;
-					if(camera.getActiveCameraBehavior() instanceof CameraLockedToEntities) {
+					if(camera.getActiveCameraBehavior() instanceof CameraCenterOverEntities) {
 					cameraLogic.centerOverEntities(terrainGenerator.getEntitiesGeom());
 				}
 			}
-			
-			camera.update();
+
 			playerInputListener.update();
 
 			float cameraYawUpdate = (float) DisplayManager.getCurrentTime() / 400;

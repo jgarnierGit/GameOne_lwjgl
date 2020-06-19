@@ -14,13 +14,13 @@ import inputListeners.PlayerInputListener;
 import modelsLibrary.SimpleGeom;
 import modelsLibrary.Terrain3D;
 
-public class CameraLockedToEntities extends Camera{
+public class CameraCenterOverEntities extends Camera{
 	private Set<Entity> entities;
 	private float angleAroundPlayer;
 	private float distanceFromEntity;
 	private Vector3f centerLock;
 	
-	private CameraLockedToEntities(PlayerInputListener inputListener, CameraEntity camera) {
+	private CameraCenterOverEntities(PlayerInputListener inputListener, CameraEntity camera) {
 		super(inputListener, camera);
 		angleAroundPlayer = 0;
 		distanceFromEntity=30;
@@ -29,8 +29,8 @@ public class CameraLockedToEntities extends Camera{
 	}
 	
 	
-	public static CameraLockedToEntities create(PlayerInputListener inputListener, CameraEntity camera) {
-		CameraLockedToEntities cameraBehavior = new CameraLockedToEntities(inputListener, camera);
+	public static CameraCenterOverEntities create(PlayerInputListener inputListener, CameraEntity camera) {
+		CameraCenterOverEntities cameraBehavior = new CameraCenterOverEntities(inputListener, camera);
 		cameraBehavior.bindInputHanlder();
 		return cameraBehavior;
 	}
@@ -38,8 +38,12 @@ public class CameraLockedToEntities extends Camera{
 
 	@Override
 	public void bindInputHanlder() {
-		// TODO Auto-generated method stub
-		
+		// nothing to bind
+	}
+	
+	@Override
+	public void unbindInputHanlder() {
+		//nothing to unbind
 	}
 	
 	/**
@@ -59,7 +63,6 @@ public class CameraLockedToEntities extends Camera{
 		}
 		 float scale = (float)1/this.entities.size();
 		 centerLock.scale(scale);
-		 logger.log(Level.INFO, centerLock.toString());
 		 
 	}
 	
@@ -73,7 +76,7 @@ public class CameraLockedToEntities extends Camera{
 			float x = centerLock.x - offsetX;
 			float z = centerLock.z - offsetZ;
 			float y = centerLock.y + vDelta;
-			camera.setPosition(new Vector3f(x,y,z));
+			cameraEntity.setPosition(new Vector3f(x,y,z));
 	}
 	
 	public void cleanEntities() {
@@ -86,7 +89,7 @@ public class CameraLockedToEntities extends Camera{
 		 * y= oHeight.get() + 1 > y ? oHeight.get() + 1 : y; }
 		 **/
 		Vector3f position = new Vector3f(x, y, z);
-		this.camera.setPosition(position);
+		this.cameraEntity.setPosition(position);
 	}
 
 	/**
@@ -97,7 +100,7 @@ public class CameraLockedToEntities extends Camera{
 	 * @return adjacent length
 	 */
 	private float calculateHorizontalDeltaForDistance(float distanceFromCamera) {
-		return (float) (distanceFromCamera * Math.cos(Math.toRadians(camera.getPitch())));
+		return (float) (distanceFromCamera * Math.cos(Math.toRadians(cameraEntity.getPitch())));
 	}
 
 	/**
@@ -108,7 +111,7 @@ public class CameraLockedToEntities extends Camera{
 	 * @return opposite length
 	 */
 	private float calculateVerticalDeltaForDistance(float distanceFromCamera) {
-		return (float) (distanceFromCamera * Math.sin(Math.toRadians(camera.getPitch())));
+		return (float) (distanceFromCamera * Math.sin(Math.toRadians(cameraEntity.getPitch())));
 	}
 
 	private void updateEntitiesCache(List<SimpleGeom> geoms) {

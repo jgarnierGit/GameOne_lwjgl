@@ -37,7 +37,11 @@ public class TerrainManager extends InputInteractable implements EntityContainer
 		this.inputListener.getKeyboard().ifPresent(keyboardListener -> {
 			keyboardListener.addRunnerOnUniquePress(GLFW.GLFW_KEY_SPACE, this::addTerrain);
 		});
-		
+	}
+	
+	@Override
+	public void unbindInputHanlder() {
+		//nothing to unbind
 	}
 	
 	public void addTerrain() {
