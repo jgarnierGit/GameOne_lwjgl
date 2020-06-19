@@ -75,9 +75,9 @@ public class Player extends InputInteractable {
 	}
 
 	public void respawning() {
-		jumping=false;
-		entity.setPositions(
-				new Vector3f(respawner.getPositions().x, respawner.getPositions().y+0.5f, respawner.getPositions().z));
+		jumping = false;
+		entity.setPositions(new Vector3f(respawner.getPositions().x, respawner.getPositions().y + 0.5f,
+				respawner.getPositions().z));
 		upwardSpeed = 0;
 		fallingTimeout = 0;
 	}
@@ -112,25 +112,23 @@ public class Player extends InputInteractable {
 
 	private void updateJumpingStatus(List<Terrain3D> terrains) {
 		Optional<Entity> nearestTerrain = getActiveTerrain(terrains);
-		Optional<Float> currentHeightTerrain = Optional.empty();
 		if (nearestTerrain.isPresent()) {
-			currentHeightTerrain = Optional.of(nearestTerrain.get().getPositions().y);
-		}
-		if (currentHeightTerrain.isPresent()) {
-			float elevation = currentHeightTerrain.get();
+			Entity terrain = nearestTerrain.get();
+			float elevation = terrain.getPositions().y;
 			if (!jumping && Math.abs(elevation - entity.getPositions().y) < 0.5) {
-				setRespawner(nearestTerrain.get());
+				setRespawner(terrain);
 				upwardSpeed = 0;
 				entity.getPositions().y = elevation;
 				isInAir = false;
 				fallingTimeout = 0;
+				return;
 			}
-		} else {
-			isInAir = true;
-			fallingTimeout += DisplayManager.getFrameTimeSeconds();
-			if (fallingTimeout > 3) {
-				respawning();
-			}
+		}
+		// in any other case player is falling.
+		isInAir = true;
+		fallingTimeout += DisplayManager.getFrameTimeSeconds();
+		if (fallingTimeout > 3) {
+			respawning();
 		}
 	}
 
@@ -141,19 +139,30 @@ public class Player extends InputInteractable {
 		for (Terrain3D terrain : terrains) {
 			/**
 			 * Optional<Entity> nearestTerrain =
-			 * SpatialComparator.getNearestEntityFromDirection(entity.getPositions(),Direction.BOTTOM,
-			 * terrain.getRenderingParameters().getEntities());
-			 * if(!nearestTerrain.isPresent()) { continue; }
+			 * SpatialComparator.getNearestEntityFromDirection(entity.getPositions(),
+			 * Direction.BOTTOM, terrain.getRenderingParameters().getEntities()); if
+			 * (!nearestTerrain.isPresent()) { continue; }
 			 **/
-			Optional<Float> terrainHeight = terrain.getHeight(entity.getPositions().x, entity.getPositions().z);
-			if (terrainHeight.isPresent() && terrainHeight.get() <= entity.getPositions().y) {
-				// logger.log(Level.INFO, "upwardspeed :"+ upwardSpeed +" terrain : " +
-				// terrainHeight.get() + " player" + entity.getPositions());
+			/**
+			 * Will be usefull for more complex terrain. not Flat terrain;
+			 * Optional<Vector3f> terrainHeight =
+			 * SpatialComparator.getProjectionOverEntity(entity.getPositions(),
+			 * SpatialComparator.Y_AXIS, terrain.getFaces(),
+			 * nearestTerrain.get().getPositions());
+			 */
+
+			Optional<Float> terrainHeight = terrain.getHeight(entity.getPositions());
+			if (!terrainHeight.isPresent()) {
+				continue;
+			}
+			// terrain.getHeight(entity.getPositions().x, entity.getPositions().z);
+			Float terrainMeasure = terrainHeight.get();
+			if (terrainMeasure <= entity.getPositions().y) {
 				if (!activeHeight.isPresent()) {
-					activeHeight = terrainHeight;
+					activeHeight = Optional.of(terrainMeasure);
 				} else {
-					if (activeHeight.get() < terrainHeight.get()) {
-						activeHeight = terrainHeight;
+					if (activeHeight.get() < terrainMeasure) {
+						activeHeight = Optional.of(terrainMeasure);
 					}
 				}
 			}
