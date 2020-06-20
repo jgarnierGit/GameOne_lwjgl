@@ -66,7 +66,7 @@ public class MainGame {
 			float cameraYawUpdate = (float) DisplayManager.getCurrentTime() / 400;
 			cameraYawUpdate = (float) Math.sin(cameraYawUpdate)/5;
 			//camera.updateYaw(cameraYawUpdate);
-			player.move(terrainGenerator.getTerrains(),camera);
+			player.move(terrainGenerator,camera);
 			masterRenderer.processEntity(player.getEntity());
 			masterRenderer.render(new ArrayList<>());
 			DisplayManager.updateDisplay();

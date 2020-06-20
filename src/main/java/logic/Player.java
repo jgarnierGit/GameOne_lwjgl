@@ -16,12 +16,12 @@ import entities.Entity;
 import entities.EntityTutos;
 import entities.SimpleEntity;
 import inputListeners.InputInteractable;
-import inputListeners.KeyboardInputListener;
 import inputListeners.PlayerInputListener;
 import modelsLibrary.Terrain3D;
 import modelsManager.Model3D;
 import renderEngine.DisplayManager;
 import utils.Direction;
+import utils.Operator;
 import utils.SpatialComparator;
 
 public class Player extends InputInteractable {
@@ -39,6 +39,7 @@ public class Player extends InputInteractable {
 	private boolean isInAir = false;
 	private EntityTutos entity;
 	private Entity respawner;
+	private Entity activeTerrain;
 	private Runnable increaseSpeed;
 	private Runnable decreaseSpeed;
 	private Runnable increaseTurn;
@@ -49,6 +50,7 @@ public class Player extends InputInteractable {
 	private Player(PlayerInputListener inputListener, Model3D model, Vector3f positions, float rotX, float rotY,
 			float rotZ, float scale) {
 		super(inputListener);
+		activeTerrain = null;
 		entity = new EntityTutos(model, positions, rotX, rotY, rotZ, scale);
 		increaseSpeed = null;
 		decreaseSpeed = null;
@@ -137,37 +139,44 @@ public class Player extends InputInteractable {
 		return this.entity;
 	}
 
-	public void move(List<Terrain3D> terrains, CameraManager camera) {
+	public void move(TerrainManager terrainManager, CameraManager camera) {
 		entity.increaseRotation(0, currentTurnSpeed * DisplayManager.getFrameTimeSeconds(), 0);
 		float distance = currentSpeed * DisplayManager.getFrameTimeSeconds();
 		float dx = (float) (distance * Math.sin(Math.toRadians(entity.getRotY())));
 		float dz = (float) (distance * Math.cos(Math.toRadians(entity.getRotY())));
-		entity.increasePosition(dx, 0, dz);
-		float finalspeed = 0.5f;
+		float dy = getYSpeed();
+		entity.increasePosition(dx, dy, dz);
+		adjustYPositionToTerrains(terrainManager, camera, Math.abs(dy));
+	}
+
+	private float getYSpeed() {
+		float ySpeed = 0;
 		if (isInAir) {
 			upwardSpeed -= GRAVITY * DisplayManager.getFrameTimeSeconds();
 			jumpingStillAllowed += DisplayManager.getFrameTimeSeconds();
 			if (upwardSpeed <= 0) {
 				jumping = false;
 			}
-			finalspeed = upwardSpeed * DisplayManager.getFrameTimeSeconds();
-			entity.increasePosition(0, finalspeed, 0);
+			ySpeed = upwardSpeed * DisplayManager.getFrameTimeSeconds();
 		}
 		else {
 			jumpingStillAllowed = 0;
 		}
-		updateJumpingStatus(terrains, camera, Math.abs(finalspeed));
+		return ySpeed;
 	}
 
-	private void updateJumpingStatus(List<Terrain3D> terrains, CameraManager camera, float finalspeed) {
-		Optional<Entity> nearestTerrain = getActiveTerrain(terrains);
-		if (nearestTerrain.isPresent()) {
-			Entity terrain = nearestTerrain.get();
-			float elevation = terrain.getPositions().y;
+	private void adjustYPositionToTerrains(TerrainManager terrainManager, CameraManager camera, float finalspeed) {
+		Optional<Entity> terrain = getActiveTerrain(terrainManager); 
+		if (terrain.isPresent()) {
+			Entity terrainEntity = terrain.get();
+			float elevation = terrainEntity.getPositions().y;
 			//avoid passing through at high velocity
 			finalspeed = finalspeed < 0.5f ? (float) 0.5 : finalspeed;
 			if (!jumping && Math.abs(elevation - entity.getPositions().y) < finalspeed) {
-				setRespawner(terrain);
+				Entity respawnerEntity = new SimpleEntity(
+						new Vector3f(entity.getPositions().x, terrainEntity.getPositions().y, entity.getPositions().z),
+						entity.getRotX(), entity.getRotY(), entity.getRotZ(), 1);
+				setRespawner(respawnerEntity);
 				upwardSpeed = 0;
 				entity.getPositions().y = elevation;
 				isInAir = false;
@@ -175,15 +184,39 @@ public class Player extends InputInteractable {
 				return;
 			}
 		}
-		testIsFallingOutOfWorld(entity.getPositions(), camera, terrains);
+		testIsFallingOutOfWorld(entity.getPositions(), camera, terrainManager.getTerrains());
 	}
 
+	private Optional<Entity> getActiveTerrain(TerrainManager terrainManager) {
+		List<Entity> activeTerrainEntities = new ArrayList<>();
+		Optional<Entity> activeEntityterrain = Optional.empty();
+		for(Terrain3D terrain : terrainManager.getTerrains()) {
+			activeTerrainEntities.addAll(terrainManager.getActiveTerrain(entity.getPositions(), terrain));
+		}
+		if(activeTerrainEntities.isEmpty()) {
+			return activeEntityterrain;
+		}
+		if(activeTerrain == null) {
+			activeEntityterrain = Optional.of(activeTerrainEntities.get(0));
+		}
+		else if(activeTerrainEntities.contains(activeTerrain)) {
+			activeEntityterrain = Optional.of(activeTerrain);
+		}
+		return activeEntityterrain;
+	}
+
+	/**
+	 * falling out of world means no more reachable terrain are below player.
+	 * @param worldPosition
+	 * @param camera
+	 * @param terrains
+	 */
 	private void testIsFallingOutOfWorld(Vector3f worldPosition, CameraManager camera, List<Terrain3D> terrains) {
 		if (fallingTimeout == 0) {
 			List<Entity> filteredTerrainEntities = new ArrayList<>();
 			for (Terrain3D terrain : terrains) {
 				filteredTerrainEntities.addAll(SpatialComparator.filterEntitiesByDirection(worldPosition,
-						Direction.BOTTOM, terrain.getRenderingParameters().getEntities()));
+						Direction.BOTTOM, Operator.INCLUSIVE, terrain.getRenderingParameters().getEntities()));
 			}
 			if (filteredTerrainEntities.isEmpty()) {
 				// init falling
@@ -201,32 +234,6 @@ public class Player extends InputInteractable {
 		if (fallingTimeout > 3) {
 			respawning(camera);
 		}
-	}
-
-	private Optional<Entity> getActiveTerrain(List<Terrain3D> terrains) {
-		Optional<Float> activeHeight = Optional.empty();
-		// TODO shortcut to implement, test with active terrain if coordinates still
-		// match.
-		for (Terrain3D terrain : terrains) {
-			Optional<Float> terrainHeight = terrain.getHeight(entity.getPositions());
-			if (!terrainHeight.isPresent()) {
-				continue;
-			}
-			Float terrainMeasure = terrainHeight.get();
-			if (terrainMeasure <= entity.getPositions().y) {
-				if (!activeHeight.isPresent()) {
-					activeHeight = Optional.of(terrainMeasure);
-				} else {
-					if (activeHeight.get() < terrainMeasure) {
-						activeHeight = Optional.of(terrainMeasure);
-					}
-				}
-			}
-		}
-		return !activeHeight.isPresent() ? Optional.empty()
-				: Optional.of(new SimpleEntity(
-						new Vector3f(entity.getPositions().x, activeHeight.get(), entity.getPositions().z),
-						entity.getRotX(), entity.getRotY(), entity.getRotZ(), 1));
 	}
 
 	public void setRespawner(Entity entity) {
