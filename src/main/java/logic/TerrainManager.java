@@ -1,5 +1,6 @@
 package logic;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -14,10 +15,10 @@ import entities.Entity;
 import entities.EntityContainer;
 import inputListeners.InputInteractable;
 import inputListeners.PlayerInputListener;
-import modelsLibrary.RegularFlatTerrain3D;
 import modelsLibrary.ISimpleGeom;
 import modelsLibrary.RawGeom;
-import modelsLibrary.Terrain3D;
+import modelsLibrary.terrain.RegularFlatTerrain3D;
+import modelsLibrary.terrain.Terrain3D;
 import renderEngine.MasterRenderer;
 import renderEngine.RenderingParameters;
 import utils.Axis;
@@ -58,7 +59,10 @@ public class TerrainManager extends InputInteractable implements EntityContainer
 		prepareForRender();
 	}
 
-	public void initiateTerrain() {
+	public void initiateTerrain() throws IOException {
+		if(!terrains.isEmpty()) {
+			return;
+		}
 		RegularFlatTerrain3D terrain = RegularFlatTerrain3D.generateRegular(masterRenderer, "terrain", 10, 0, 0, 0);
 		setupTerrain(terrain);
 		terrains.add(terrain);

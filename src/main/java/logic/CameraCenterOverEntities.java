@@ -12,7 +12,7 @@ import entities.Entity;
 import inputListeners.PlayerInputListener;
 import modelsLibrary.ISimpleGeom;
 import modelsLibrary.RawGeom;
-import modelsLibrary.Terrain3D;
+import modelsLibrary.terrain.Terrain3D;
 
 public class CameraCenterOverEntities extends Camera{
 	private Set<Entity> entities;

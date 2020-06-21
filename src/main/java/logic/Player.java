@@ -17,7 +17,7 @@ import entities.EntityTutos;
 import entities.SimpleEntity;
 import inputListeners.InputInteractable;
 import inputListeners.PlayerInputListener;
-import modelsLibrary.Terrain3D;
+import modelsLibrary.terrain.Terrain3D;
 import modelsManager.Model3D;
 import renderEngine.DisplayManager;
 import utils.Direction;
