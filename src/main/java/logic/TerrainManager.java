@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.stream.Collectors;
 
 import org.lwjgl.glfw.GLFW;
 import org.lwjgl.opengl.GL11;
@@ -14,7 +15,8 @@ import entities.EntityContainer;
 import inputListeners.InputInteractable;
 import inputListeners.PlayerInputListener;
 import modelsLibrary.RegularFlatTerrain3D;
-import modelsLibrary.SimpleGeom;
+import modelsLibrary.ISimpleGeom;
+import modelsLibrary.RawGeom;
 import modelsLibrary.Terrain3D;
 import renderEngine.MasterRenderer;
 import renderEngine.RenderingParameters;
@@ -52,7 +54,7 @@ public class TerrainManager extends InputInteractable implements EntityContainer
 		float x = (float) ThreadLocalRandom.current().nextDouble(0, 100);
 		float y = (float) ThreadLocalRandom.current().nextDouble(-10, 30); // elevation
 		float z = (float) ThreadLocalRandom.current().nextDouble(-30, 30);
-		terrains.get(0).getRenderingParameters().addEntity(new Vector3f(x, y, z), 0, 0, 0, 1);
+		terrains.get(0).getSimpleGeom().getRenderingParameters().addEntity(new Vector3f(x, y, z), 0, 0, 0, 1);
 		prepareForRender();
 	}
 
@@ -69,23 +71,24 @@ public class TerrainManager extends InputInteractable implements EntityContainer
 
 	public void prepareForRender() { // TODO try to automate this part.
 		for (Terrain3D terrain : terrains) {
-			masterRenderer.reloadAndprocess(terrain);
+			masterRenderer.reloadAndprocess(terrain.getSimpleGeom());
 		}
 		masterRenderer.sendForRendering();
 	}
 
 	private void setupTerrain(Terrain3D terrain) {
-		RenderingParameters terrainParameters = terrain.getRenderingParameters();
+		RenderingParameters terrainParameters = terrain.getSimpleGeom().getRenderingParameters();
 		// TODO hide from this interface.
 		// terrainParameters.disableRenderOptions();
 		terrainParameters.setRenderMode(GL11.GL_TRIANGLES);
-		terrain.invertNormals();
+		terrain.getSimpleGeom().invertNormals();
 	}
 
+	//TODO extract in GeomContainer.
 	@Override
-	public List<SimpleGeom> getEntitiesGeom() {
-		List<SimpleGeom> geoms = new ArrayList<>();
-		geoms.addAll(this.terrains);
+	public List<ISimpleGeom> getEntitiesGeom() {
+		List<ISimpleGeom> geoms = new ArrayList<>();
+		geoms.addAll(this.terrains.stream().map(Terrain3D::getSimpleGeom).collect(Collectors.toList()));
 		return geoms;
 	}
 
@@ -104,20 +107,24 @@ public class TerrainManager extends InputInteractable implements EntityContainer
 		Float terrainMeasure = terrainHeight.get();
 
 		List<Entity> terrainEntities = SpatialComparator.filterEntitiesByValueEquality(terrainMeasure, Axis.Y,
-				terrain.getRenderingParameters().getEntities());
-		List<Vector3f> geomVertices = terrain.buildVerticesList();
-		Vector3f geomNearLeft = geomVertices.get(0);
-		Vector3f geomFarRight = geomVertices.get(geomVertices.size() - 1);
+				terrain.getSimpleGeom().getRenderingParameters().getEntities());
+		List<Vector3f> geomVertices = terrain.getSimpleGeom().buildVerticesList();
+		
 		for (Entity entity : terrainEntities) {
-			Vector3f worldNearLeft = Vector3f.add(entity.getPositions(), geomNearLeft, null);
-			Vector3f worldFarRight = Vector3f.add(entity.getPositions(), geomFarRight, null);
-			if (entity.getPositions().x >= worldNearLeft.x && entity.getPositions().x <= worldFarRight.x
-					&& entity.getPositions().z >= worldNearLeft.z && entity.getPositions().z <= worldFarRight.z) {
+			if(testItersectionWithEntity(entity, geomVertices)) {
 				intersectedTerrains.add(entity);
 			}
 		}
-
 		return intersectedTerrains;
+	}
+	
+	public boolean testItersectionWithEntity(Entity entity, List<Vector3f> geomVertices) {
+		Vector3f geomNearLeft = geomVertices.get(0);
+		Vector3f geomFarRight = geomVertices.get(geomVertices.size() - 1);
+		Vector3f worldNearLeft = Vector3f.add(entity.getPositions(), geomNearLeft, null);
+		Vector3f worldFarRight = Vector3f.add(entity.getPositions(), geomFarRight, null);
+		return entity.getPositions().x >= worldNearLeft.x && entity.getPositions().x <= worldFarRight.x
+				&& entity.getPositions().z >= worldNearLeft.z && entity.getPositions().z <= worldFarRight.z;
 	}
 
 }

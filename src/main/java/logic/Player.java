@@ -216,7 +216,7 @@ public class Player extends InputInteractable {
 			List<Entity> filteredTerrainEntities = new ArrayList<>();
 			for (Terrain3D terrain : terrains) {
 				filteredTerrainEntities.addAll(SpatialComparator.filterEntitiesByDirection(worldPosition,
-						Direction.BOTTOM, Operator.INCLUSIVE, terrain.getRenderingParameters().getEntities()));
+						Direction.BOTTOM, Operator.INCLUSIVE, terrain.getSimpleGeom().getRenderingParameters().getEntities()));
 			}
 			if (filteredTerrainEntities.isEmpty()) {
 				// init falling
