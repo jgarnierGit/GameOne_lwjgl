@@ -1,6 +1,8 @@
-package models;
+package models.water;
 
+import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 
 import org.lwjgl.opengl.GL11;
 import org.lwjglx.util.vector.Vector3f;
@@ -27,8 +29,7 @@ public class Water {
 	 */
 	public static Water create(MasterRenderer masterRenderer, String vertexFile, String fragmentFile) throws IOException {
 		Water water = new Water();
-		water.waterGeom = SimpleGeom3DBuilder.create(masterRenderer.getLoader(),  masterRenderer.get3DRenderer(), "water").withDefaultShader().build();
-				//.withShader(vertexFile, fragmentFile).build();
+		water.waterGeom = SimpleGeom3DBuilder.create(masterRenderer.getLoader(),  masterRenderer.get3DRenderer(), "water").withShader(Water.class::getResourceAsStream,vertexFile, fragmentFile).build();
 		water.masterRenderer = masterRenderer;
 		return water;
 	}

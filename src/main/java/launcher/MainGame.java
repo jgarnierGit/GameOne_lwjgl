@@ -13,7 +13,7 @@ import logic.CameraManager;
 import logic.Player;
 import logic.TerrainManager;
 import models.Monkey;
-import models.Water;
+import models.water.Water;
 import renderEngine.DisplayManager;
 import renderEngine.MasterRenderer;
 
@@ -25,7 +25,6 @@ public class MainGame {
 		// TODO document the fact that we need 3D folder and 2D folder in /resources
 		CameraManager camera = CameraManager.create(playerInputListener, new Vector3f(-20, 20, 50), 20, 45);
 
-		// TODO specify vertexShaders & FragmentShaders here.
 		MasterRenderer masterRenderer = MasterRenderer.create(camera.getCamera());
 		Monkey monkey = new Monkey(masterRenderer);
 		Player player = Player.create(playerInputListener, monkey, new Vector3f(-5, 0, 0), 0, 90, 0, 1);
