@@ -3,9 +3,14 @@ package launcher;
 import java.io.IOException;
 import java.util.ArrayList;
 
+import org.lwjgl.opengl.GL11;
+import org.lwjgl.opengl.GL30;
+import org.lwjglx.util.vector.Vector2f;
 import org.lwjglx.util.vector.Vector3f;
+import org.lwjglx.util.vector.Vector4f;
 
 import camera.behavior.CameraFreeFly;
+import entities.GuiTexture;
 import inputListeners.PlayerInputListener;
 import inputListeners.PlayerInputListenerBuilder;
 import logic.CameraCenterOverEntities;
@@ -14,7 +19,9 @@ import logic.Player;
 import logic.TerrainManager;
 import models.Monkey;
 import models.water.Water;
+import models.water.WaterFrameBuffer;
 import renderEngine.DisplayManager;
+import renderEngine.GuiRenderer;
 import renderEngine.MasterRenderer;
 
 public class MainGame {
@@ -45,9 +52,14 @@ public class MainGame {
 		// CameraCenterOverEntities cameraLogic = camera.getCenterOverEntitiesCamera();
 		camera.getFreeFlyCamera();
 		camera.getCameraLockedToEntity(player.getEntity());
+		WaterFrameBuffer waterFrameBuffer = new WaterFrameBuffer();
+		GuiTexture gui =new GuiTexture(waterFrameBuffer.getReflectionTexture(), new Vector2f(-0.5f,0.5f), new Vector2f(0.25f,0.25f));
+		GuiRenderer guiRenderer = new GuiRenderer(masterRenderer.getLoader());
 		while (DisplayManager.isRunning()) {
 			playerInputListener.update();
 			camera.update();
+			// Tuto ClippingPlane 
+			GL11.glEnable(GL30.GL_CLIP_DISTANCE0);
 			// FIXME maybe it was a mistake to update once per frame viewMatrix?
 			// need to find a way to update it once every transformation on camera are done.
 			// (includes InputListener / gameLogic...)
@@ -69,7 +81,15 @@ public class MainGame {
 			// camera.updateYaw(cameraYawUpdate);
 			player.move(terrainGenerator, camera);
 			masterRenderer.processEntity(player.getEntity());
-			masterRenderer.render(new ArrayList<>());
+			//what is inside those 2 methods will be rendered to Frame Buffer Object.
+			waterFrameBuffer.bindReflectionFrameBuffer();
+			masterRenderer.render(new ArrayList<>(), new Vector4f(0,-1,0,2));
+			waterFrameBuffer.unbindCurrentFrameBuffer();
+			//FIXME side effect while rendering twice. should be consistent
+			masterRenderer.render(new ArrayList<>(), new Vector4f(0,-1,0,15));
+			guiRenderer.addGui(gui);
+			guiRenderer.render();
+			masterRenderer.clean();
 			DisplayManager.updateDisplay();
 		}
 		playerInputListener.clear();
