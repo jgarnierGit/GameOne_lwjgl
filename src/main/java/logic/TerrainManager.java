@@ -12,7 +12,7 @@ import org.lwjgl.opengl.GL11;
 import org.lwjglx.util.vector.Vector3f;
 
 import entities.Entity;
-import entities.EntityContainer;
+import entities.GeomContainer;
 import inputListeners.InputInteractable;
 import inputListeners.PlayerInputListener;
 import modelsLibrary.ISimpleGeom;
@@ -24,7 +24,7 @@ import renderEngine.RenderingParameters;
 import utils.Axis;
 import utils.SpatialComparator;
 
-public class TerrainManager extends InputInteractable implements EntityContainer {
+public class TerrainManager extends InputInteractable implements GeomContainer {
 	List<Terrain3D> terrains = new ArrayList<>();
 	MasterRenderer masterRenderer;
 
@@ -90,7 +90,7 @@ public class TerrainManager extends InputInteractable implements EntityContainer
 
 	//TODO extract in GeomContainer.
 	@Override
-	public List<ISimpleGeom> getEntitiesGeom() {
+	public List<ISimpleGeom> getGeoms() {
 		List<ISimpleGeom> geoms = new ArrayList<>();
 		geoms.addAll(this.terrains.stream().map(Terrain3D::getSimpleGeom).collect(Collectors.toList()));
 		return geoms;

@@ -53,7 +53,8 @@ public class MainGame {
 		camera.getFreeFlyCamera();
 		camera.getCameraLockedToEntity(player.getEntity());
 		WaterFrameBuffer waterFrameBuffer = new WaterFrameBuffer();
-		GuiTexture gui =new GuiTexture(waterFrameBuffer.getReflectionTexture(), new Vector2f(-0.5f,0.5f), new Vector2f(0.25f,0.25f));
+		GuiTexture guiReflection =new GuiTexture(waterFrameBuffer.getReflectionTexture(), new Vector2f(-0.5f,0.5f), new Vector2f(0.25f,0.25f));
+		GuiTexture guiRefraction =new GuiTexture(waterFrameBuffer.getRefractionTexture(), new Vector2f(0.5f,0.5f), new Vector2f(0.25f,0.25f));
 		GuiRenderer guiRenderer = new GuiRenderer(masterRenderer.getLoader());
 		while (DisplayManager.isRunning()) {
 			playerInputListener.update();
@@ -81,13 +82,30 @@ public class MainGame {
 			// camera.updateYaw(cameraYawUpdate);
 			player.move(terrainGenerator, camera);
 			masterRenderer.processEntity(player.getEntity());
+			
+			Vector3f waterPosition = water.getGeoms().get(0).getRenderingParameters().getEntities().get(0).getPositions();
+			
 			//what is inside those 2 methods will be rendered to Frame Buffer Object.
 			waterFrameBuffer.bindReflectionFrameBuffer();
-			masterRenderer.render(new ArrayList<>(), new Vector4f(0,-1,0,2));
+			float cameraDistanceReflection = 2 * (camera.getCamera().getPosition().y - waterPosition.y);
+			camera.getCamera().getPosition().y -= cameraDistanceReflection;
+			camera.getCamera().invertPitch();
+			//FIXME yuk... painful to get information from entity...
+			// see math behind plane equation.
+			masterRenderer.render(new ArrayList<>(), new Vector4f(0,1,0,-waterPosition.y));
+			
+			waterFrameBuffer.bindRefractionFrameBuffer();
+			camera.getCamera().getPosition().y += cameraDistanceReflection;
+			camera.getCamera().invertPitch();
+			masterRenderer.render(new ArrayList<>(), new Vector4f(0,-1,0,waterPosition.y));
+			
+			
+			GL11.glDisable(GL30.GL_CLIP_DISTANCE0);
 			waterFrameBuffer.unbindCurrentFrameBuffer();
 			//FIXME side effect while rendering twice. should be consistent
-			masterRenderer.render(new ArrayList<>(), new Vector4f(0,-1,0,15));
-			guiRenderer.addGui(gui);
+			masterRenderer.render(new ArrayList<>(), new Vector4f(0,-1,0,500));// 500 to avoid any clipping in world
+			guiRenderer.addGui(guiReflection);
+			guiRenderer.addGui(guiRefraction);
 			guiRenderer.render();
 			masterRenderer.clean();
 			DisplayManager.updateDisplay();

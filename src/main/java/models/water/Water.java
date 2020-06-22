@@ -3,16 +3,20 @@ package models.water;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Arrays;
+import java.util.List;
 
 import org.lwjgl.opengl.GL11;
 import org.lwjglx.util.vector.Vector3f;
 
+import entities.GeomContainer;
+import modelsLibrary.ISimpleGeom;
 import modelsLibrary.SimpleGeom3D;
 import modelsLibrary.SimpleGeom3DBuilder;
 import renderEngine.MasterRenderer;
 import shaderManager.ShaderProgram;
 
-public class Water { 
+public class Water implements GeomContainer{ 
 	SimpleGeom3D waterGeom;
 	MasterRenderer masterRenderer;
 
@@ -59,5 +63,10 @@ public class Water {
 	public void prepareForRender() { // TODO try to automate this part.
 		masterRenderer.reloadAndprocess(this.waterGeom);
 		masterRenderer.sendForRendering();
+	}
+
+	@Override
+	public List<ISimpleGeom> getGeoms() {
+		return Arrays.asList(waterGeom);
 	}
 }
