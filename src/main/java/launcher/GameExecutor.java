@@ -12,7 +12,7 @@ public class GameExecutor {
 		while (DisplayManager.isRunning()) {
 			masterRenderer.processEntity(player.getEntity());
 			masterRenderer.processEntity(player.getEntity());
-			masterRenderer.render(new ArrayList<>());
+			//masterRenderer.render(new ArrayList<>());
 		}
 		masterRenderer.cleanUp();
 	}
