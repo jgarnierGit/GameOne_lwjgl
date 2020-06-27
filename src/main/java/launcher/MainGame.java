@@ -35,8 +35,7 @@ public class MainGame {
 		MasterRenderer masterRenderer = MasterRenderer.create(camera.getCamera());
 		Monkey monkey = new Monkey(masterRenderer);
 		Player player = Player.create(playerInputListener, monkey, new Vector3f(-5, 0, 0), 0, 90, 0, 1);
-		Water water = Water.create(masterRenderer, "waterVertexShader.txt", "waterFragmentShader.txt");
-		water.initWater();
+		
 		// TODO create interface Model3D to guide user for minimal structure
 
 		// TODO put in there while (DisplayManager.isRunning()) { with all logic.
@@ -53,9 +52,13 @@ public class MainGame {
 		camera.getFreeFlyCamera();
 		camera.getCameraLockedToEntity(player.getEntity());
 		WaterFrameBuffer waterFrameBuffer = new WaterFrameBuffer();
+		Water water = Water.create(masterRenderer, waterFrameBuffer, camera.getCamera(), "waterVertexShader.txt", "waterFragmentShader.txt");
+		water.initWater();
+		/** example of using FrameBuffer as Gui Texture
 		GuiTexture guiReflection =new GuiTexture(waterFrameBuffer.getReflectionTexture(), new Vector2f(-0.5f,0.5f), new Vector2f(0.25f,0.25f));
 		GuiTexture guiRefraction =new GuiTexture(waterFrameBuffer.getRefractionTexture(), new Vector2f(0.5f,0.5f), new Vector2f(0.25f,0.25f));
 		GuiRenderer guiRenderer = new GuiRenderer(masterRenderer.getLoader());
+		**/
 		while (DisplayManager.isRunning()) {
 			playerInputListener.update();
 			camera.update();
@@ -104,9 +107,12 @@ public class MainGame {
 			waterFrameBuffer.unbindCurrentFrameBuffer();
 			//FIXME side effect while rendering twice. should be consistent
 			masterRenderer.render(new ArrayList<>(), new Vector4f(0,-1,0,500));// 500 to avoid any clipping in world
-			guiRenderer.addGui(guiReflection);
+	/**
+	 * 		guiRenderer.addGui(guiReflection);
+
 			guiRenderer.addGui(guiRefraction);
 			guiRenderer.render();
+				 */
 			masterRenderer.clean();
 			DisplayManager.updateDisplay();
 		}
