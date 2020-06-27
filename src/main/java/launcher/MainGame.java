@@ -20,6 +20,7 @@ import logic.TerrainManager;
 import models.Monkey;
 import models.water.Water;
 import models.water.WaterFrameBuffer;
+import modelsLibrary.SkyboxDayNight;
 import renderEngine.DisplayManager;
 import renderEngine.GuiRenderer;
 import renderEngine.MasterRenderer;
@@ -35,7 +36,7 @@ public class MainGame {
 		MasterRenderer masterRenderer = MasterRenderer.create(camera.getCamera());
 		Monkey monkey = new Monkey(masterRenderer);
 		Player player = Player.create(playerInputListener, monkey, new Vector3f(-5, 0, 0), 0, 90, 0, 1);
-		
+		SkyboxDayNight skybox = SkyboxDayNight.create(masterRenderer, camera.getCamera());
 		// TODO create interface Model3D to guide user for minimal structure
 
 		// TODO put in there while (DisplayManager.isRunning()) { with all logic.

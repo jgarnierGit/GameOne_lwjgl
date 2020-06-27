@@ -13,7 +13,6 @@ import modelsLibrary.ISimpleGeom;
 import modelsLibrary.SimpleGeom3D;
 import modelsLibrary.SimpleGeom3DBuilder;
 import renderEngine.MasterRenderer;
-import shaderManager.Draw3DShader;
 
 public class Water implements GeomContainer{ 
 	SimpleGeom3D waterGeom;

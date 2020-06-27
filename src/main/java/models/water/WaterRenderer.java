@@ -7,7 +7,6 @@ import org.lwjgl.opengl.GL30;
 import org.lwjglx.util.vector.Matrix4f;
 
 import camera.CameraEntity;
-import modelsLibrary.ISimpleGeom;
 import renderEngine.DrawRenderer;
 import renderEngine.Loader.VBOIndex;
 import renderEngine.RenderingParameters;
@@ -30,12 +29,6 @@ private CameraEntity camera;
 	}
 
 	@Override
-	public void cleanUp() {
-		// TODO Auto-generated method stub
-		
-	}
-
-	@Override
 	public void render() {
 		for (RenderingParameters params : renderingParams) {
 			WaterShader draw3DShader = (WaterShader) params.getShader();
@@ -43,7 +36,7 @@ private CameraEntity camera;
 			prepare(params.getGeom().getRawGeom().getVaoId());
 			Matrix4f viewMatrix = camera.getViewMatrix();
 			draw3DShader.loadViewMatrix(viewMatrix);
-			//generic part to extract
+			//generic part to extract, works also with SkyboxRenderer as its shader doesn't implements transformationMatrix.
 			params.getEntities().forEach(entity -> {
 				Matrix4f transformationM = Maths.createTransformationMatrix(entity.getPositions(), entity.getRotX(),
 						entity.getRotY(), entity.getRotZ(), entity.getScale());
