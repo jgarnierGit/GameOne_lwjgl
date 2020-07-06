@@ -10,8 +10,8 @@ import camera.Camera;
 import camera.CameraEntity;
 import entities.Entity;
 import inputListeners.PlayerInputListener;
-import modelsLibrary.ISimpleGeom;
-import modelsLibrary.RawGeom;
+import modelsLibrary.IRenderableGeom;
+import modelsLibrary.VAOGeom;
 import modelsLibrary.terrain.Terrain3D;
 
 public class CameraCenterOverEntities extends Camera{
@@ -55,7 +55,7 @@ public class CameraCenterOverEntities extends Camera{
 	 * TODO find an implementation to allow this one or freeFly but not together.
 	 * @param terrains
 	 */
-	public void centerOverEntities(List<ISimpleGeom> terrains) {
+	public void centerOverEntities(List<IRenderableGeom> terrains) {
 		 updateEntitiesCache(terrains);
 		 centerLock = null;
 		 for(Entity entity :this.entities) {
@@ -119,8 +119,8 @@ public class CameraCenterOverEntities extends Camera{
 		return (float) (distanceFromCamera * Math.sin(Math.toRadians(cameraEntity.getPitch())));
 	}
 
-	private void updateEntitiesCache(List<ISimpleGeom> geoms) {
-		for (ISimpleGeom geom : geoms) {
+	private void updateEntitiesCache(List<IRenderableGeom> geoms) {
+		for (IRenderableGeom geom : geoms) {
 			if (geom.getRenderingParameters().isNotUsingEntities()) {
 				throw new IllegalStateException("Geom must have entities to process");
 			}

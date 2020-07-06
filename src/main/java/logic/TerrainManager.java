@@ -5,18 +5,19 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ThreadLocalRandom;
-import java.util.stream.Collectors;
 
 import org.lwjgl.glfw.GLFW;
 import org.lwjgl.opengl.GL11;
 import org.lwjglx.util.vector.Vector3f;
 
+import camera.CameraEntity;
 import entities.Entity;
-import entities.GeomContainer;
+import entities.SimpleEntity;
 import inputListeners.InputInteractable;
 import inputListeners.PlayerInputListener;
-import modelsLibrary.ISimpleGeom;
-import modelsLibrary.RawGeom;
+import models.backgroundTerrain.BackgroundTerrain;
+import modelsLibrary.SimpleGeom3D;
+import modelsLibrary.SimpleGeom3DBuilder;
 import modelsLibrary.terrain.RegularFlatTerrain3D;
 import modelsLibrary.terrain.Terrain3D;
 import renderEngine.MasterRenderer;
@@ -24,8 +25,9 @@ import renderEngine.RenderingParameters;
 import utils.Axis;
 import utils.SpatialComparator;
 
-public class TerrainManager extends InputInteractable implements GeomContainer {
+public class TerrainManager extends InputInteractable {
 	List<Terrain3D> terrains = new ArrayList<>();
+	BackgroundTerrain groundTerrain;
 	MasterRenderer masterRenderer;
 
 	private TerrainManager(MasterRenderer masterRenderer, PlayerInputListener inputListener) {
@@ -33,10 +35,20 @@ public class TerrainManager extends InputInteractable implements GeomContainer {
 		this.masterRenderer = masterRenderer;
 	}
 
-	public static TerrainManager create(MasterRenderer masterRenderer, PlayerInputListener inputListener) {
+	public static TerrainManager create(MasterRenderer masterRenderer, PlayerInputListener inputListener, CameraEntity cameraEntity) throws IOException {
 		TerrainManager terrainManager = new TerrainManager(masterRenderer, inputListener);
 		terrainManager.bindInputHanlder();
+		terrainManager.initiateTerrain();
+	//	terrainManager.initiateGroundTerrain(cameraEntity);
 		return terrainManager;
+	}
+
+	private void initiateGroundTerrain(CameraEntity cameraEntity) throws IOException {
+		if(groundTerrain != null) {
+			return;
+		}
+		SimpleEntity entity = new SimpleEntity(new Vector3f(-50,-20,-50), 0, 0, 0, 1);
+		groundTerrain = BackgroundTerrain.create(masterRenderer, cameraEntity, entity, 100, 30,"heightmap.png");
 	}
 
 	@Override
@@ -55,15 +67,17 @@ public class TerrainManager extends InputInteractable implements GeomContainer {
 		float x = (float) ThreadLocalRandom.current().nextDouble(0, 100);
 		float y = (float) ThreadLocalRandom.current().nextDouble(-10, 30); // elevation
 		float z = (float) ThreadLocalRandom.current().nextDouble(-30, 30);
-		terrains.get(0).getSimpleGeom().getRenderingParameters().addEntity(new Vector3f(x, y, z), 0, 0, 0, 1);
+		terrains.get(0).getRenderableGeom().getRenderingParameters().addEntity(new Vector3f(x, y, z), 0, 0, 0, 1);
 		prepareForRender();
 	}
 
-	public void initiateTerrain() throws IOException {
+	private void initiateTerrain() throws IOException {
 		if(!terrains.isEmpty()) {
 			return;
 		}
-		RegularFlatTerrain3D terrain = RegularFlatTerrain3D.generateRegular(masterRenderer, "terrain", 10, 0, 0, 0);
+		SimpleEntity entity = new SimpleEntity(new Vector3f(0, 0, 0), 0, 0, 0, 1);
+		SimpleGeom3D terrainGeom =  SimpleGeom3DBuilder.create(masterRenderer.getLoader(), masterRenderer.get3DRenderer(), "terrain").withDefaultShader().withEntity(entity).build();
+		RegularFlatTerrain3D terrain = RegularFlatTerrain3D.generateRegular(terrainGeom, entity, 10);
 		setupTerrain(terrain);
 		terrains.add(terrain);
 		prepareForRender();
@@ -73,27 +87,19 @@ public class TerrainManager extends InputInteractable implements GeomContainer {
 		return this.terrains;
 	}
 
-	public void prepareForRender() { // TODO try to automate this part.
+	public void prepareForRender() { // TODO try to automate this part. try using visitor
 		for (Terrain3D terrain : terrains) {
-			masterRenderer.reloadAndprocess(terrain.getSimpleGeom());
+			masterRenderer.reloadAndprocess(terrain.getRenderableGeom());
 		}
 		masterRenderer.sendForRendering();
 	}
 
 	private void setupTerrain(Terrain3D terrain) {
-		RenderingParameters terrainParameters = terrain.getSimpleGeom().getRenderingParameters();
+		RenderingParameters terrainParameters = terrain.getRenderableGeom().getRenderingParameters();
 		// TODO hide from this interface.
 		// terrainParameters.disableRenderOptions();
 		terrainParameters.setRenderMode(GL11.GL_TRIANGLES);
-		terrain.getSimpleGeom().invertNormals();
-	}
-
-	//TODO extract in GeomContainer.
-	@Override
-	public List<ISimpleGeom> getGeoms() {
-		List<ISimpleGeom> geoms = new ArrayList<>();
-		geoms.addAll(this.terrains.stream().map(Terrain3D::getSimpleGeom).collect(Collectors.toList()));
-		return geoms;
+		terrain.getEditableGeom().invertNormals();
 	}
 
 	/**
@@ -111,8 +117,8 @@ public class TerrainManager extends InputInteractable implements GeomContainer {
 		Float terrainMeasure = terrainHeight.get();
 
 		List<Entity> terrainEntities = SpatialComparator.filterEntitiesByValueEquality(terrainMeasure, Axis.Y,
-				terrain.getSimpleGeom().getRenderingParameters().getEntities());
-		List<Vector3f> geomVertices = terrain.getSimpleGeom().buildVerticesList();
+				terrain.getRenderableGeom().getRenderingParameters().getEntities());
+		List<Vector3f> geomVertices = (List<Vector3f>) terrain.getRenderableGeom().getVertices();
 		
 		for (Entity entity : terrainEntities) {
 			if(testItersectionWithEntity(entity, geomVertices)) {

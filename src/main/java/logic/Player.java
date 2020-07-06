@@ -17,6 +17,9 @@ import entities.EntityTutos;
 import entities.SimpleEntity;
 import inputListeners.InputInteractable;
 import inputListeners.PlayerInputListener;
+import modelsLibrary.IEditableGeom;
+import modelsLibrary.IRenderableGeom;
+import modelsLibrary.SimpleGeom3D;
 import modelsLibrary.terrain.Terrain3D;
 import modelsManager.Model3D;
 import renderEngine.DisplayManager;
@@ -37,7 +40,7 @@ public class Player extends InputInteractable {
 	private float jumpingStillAllowed = 0;
 	private boolean jumping = false;
 	private boolean isInAir = false;
-	private EntityTutos entity;
+	private Entity entity;
 	private Entity respawner;
 	private Entity activeTerrain;
 	private Runnable increaseSpeed;
@@ -47,11 +50,10 @@ public class Player extends InputInteractable {
 	private Runnable resetSpeed;
 	private Runnable resetTurn;
 
-	private Player(PlayerInputListener inputListener, Model3D model, Vector3f positions, float rotX, float rotY,
-			float rotZ, float scale) {
+	private Player(PlayerInputListener inputListener, Entity entityReference) {
 		super(inputListener);
 		activeTerrain = null;
-		entity = new EntityTutos(model, positions, rotX, rotY, rotZ, scale);
+		entity = entityReference;
 		increaseSpeed = null;
 		decreaseSpeed = null;
 		increaseTurn = null;
@@ -60,9 +62,16 @@ public class Player extends InputInteractable {
 		resetTurn = null;
 	}
 
-	public static Player create(PlayerInputListener inputListener, Model3D model, Vector3f positions, float rotX,
+	public static Player create(PlayerInputListener inputListener, IRenderableGeom model, Vector3f positions, float rotX,
 			float rotY, float rotZ, float scale) {
-		Player player = new Player(inputListener, model, positions, rotX, rotY, rotZ, scale);
+
+		Entity entity = model.getRenderingParameters().getEntities().get(0);
+		entity.setPositions(positions);
+		entity.setRotX(rotX);
+		entity.setRotY(rotY);
+		entity.setRotZ(rotZ);
+		entity.setScale(scale);
+		Player player = new Player(inputListener,entity);
 		player.bindInputHanlder();
 		player.respawner = new SimpleEntity(new Vector3f(0, 10, 0), rotX, rotY, rotZ, scale);
 		return player;
@@ -135,7 +144,7 @@ public class Player extends InputInteractable {
 		}
 	}
 
-	public EntityTutos getEntity() {
+	public Entity getEntity() {
 		return this.entity;
 	}
 
@@ -216,7 +225,7 @@ public class Player extends InputInteractable {
 			List<Entity> filteredTerrainEntities = new ArrayList<>();
 			for (Terrain3D terrain : terrains) {
 				filteredTerrainEntities.addAll(SpatialComparator.filterEntitiesByDirection(worldPosition,
-						Direction.BOTTOM, Operator.INCLUSIVE, terrain.getSimpleGeom().getRenderingParameters().getEntities()));
+						Direction.BOTTOM, Operator.INCLUSIVE, terrain.getRenderableGeom().getRenderingParameters().getEntities()));
 			}
 			if (filteredTerrainEntities.isEmpty()) {
 				// init falling

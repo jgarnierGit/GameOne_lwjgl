@@ -66,4 +66,10 @@ private int locationViewMatrix;
 		// Nothing to do.
 		
 	}
+
+	@Override
+	public void setUseImage(boolean useImage) {
+		// TODO Auto-generated method stub
+		
+	}
 }

@@ -1,15 +1,16 @@
 package models.water;
 
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.List;
 
 import org.lwjgl.opengl.GL11;
 import org.lwjglx.util.vector.Vector3f;
 
 import camera.CameraEntity;
 import entities.GeomContainer;
-import modelsLibrary.ISimpleGeom;
+import entities.SimpleEntity;
+import modelsLibrary.GeomEditor;
+import modelsLibrary.IEditableGeom;
+import modelsLibrary.IRenderableGeom;
 import modelsLibrary.SimpleGeom3D;
 import modelsLibrary.SimpleGeom3DBuilder;
 import renderEngine.MasterRenderer;
@@ -36,18 +37,21 @@ public class Water implements GeomContainer{
 		WaterShader waterShader = WaterShader.create(vertexFile, fragmentFile);
 		water.renderer = WaterRenderer.create(waterFrameBuffer, waterShader, cameraEntity);
 		masterRenderer.addRenderer(water.renderer);
-		water.waterGeom = SimpleGeom3DBuilder.create(masterRenderer.getLoader(),  water.renderer, "water").withShader(waterShader).build();
+		SimpleEntity entity = new SimpleEntity(new Vector3f(0,-20,0), 0, 0, 0, 1);
+		
+		water.waterGeom = SimpleGeom3DBuilder.create(masterRenderer.getLoader(),  water.renderer, "water").withShader(waterShader).withEntity(entity).build();
+		water.initWater();
 		return water;
 	}
 
 	public void initWater() {
-		if (!this.waterGeom.buildVerticesList().isEmpty()) {
+		if (!this.waterGeom.getVertices().isEmpty()) {
 			return;
 		}
-		Vector3f leftNear = new Vector3f(-50, -20, -50);
-		Vector3f rightNear = new Vector3f(50, -20, -50);
-		Vector3f rightFar = new Vector3f(50, -20, 50);
-		Vector3f leftFar = new Vector3f(-50, -20, 50);
+		Vector3f leftNear = new Vector3f(-50, 0, -50);
+		Vector3f rightNear = new Vector3f(50, 0, -50);
+		Vector3f rightFar = new Vector3f(50, 0, 50);
+		Vector3f leftFar = new Vector3f(-50, 0, 50);
 		//TODO addPoint must be unique, and add setFaces which will use indices vertices.
 		this.waterGeom.addPoint(leftNear);
 		this.waterGeom.addPoint(rightFar);
@@ -66,7 +70,20 @@ public class Water implements GeomContainer{
 	}
 
 	@Override
-	public List<ISimpleGeom> getGeoms() {
-		return Arrays.asList(waterGeom);
+	public IEditableGeom getEditableGeom() {
+		return waterGeom;
+	}
+
+	@Override
+	public IRenderableGeom getRenderableGeom() {
+		return waterGeom;
+	}
+
+	/**
+	 * TODO hide this...
+	 */
+	@Override
+	public GeomEditor getGeomEditor() {
+		return waterGeom.getGeomEditor();
 	}
 }

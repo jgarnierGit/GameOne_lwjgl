@@ -1,7 +1,5 @@
-package models.water;
+package models.backgroundTerrain;
 
-import org.lwjgl.opengl.GL11;
-import org.lwjgl.opengl.GL13;
 import org.lwjgl.opengl.GL20;
 import org.lwjgl.opengl.GL30;
 import org.lwjglx.util.vector.Matrix4f;
@@ -10,28 +8,25 @@ import camera.CameraEntity;
 import renderEngine.DrawRenderer;
 import renderEngine.Loader.VBOIndex;
 import renderEngine.RenderingParameters;
+import shaderManager.IShader3D;
 import toolbox.Maths;
 
-public class WaterRenderer extends DrawRenderer{
-private WaterFrameBuffer frameBuffer;
+public class BackgroundTerrainRenderer extends DrawRenderer{
 //TODO extract in abstract class specific for 3D
 private CameraEntity camera;
-	private WaterRenderer(WaterFrameBuffer frameBuffer, CameraEntity camera) {
-		this.frameBuffer = frameBuffer;
+
+	private BackgroundTerrainRenderer(CameraEntity camera) {
 		this.camera = camera;
 	}
 	
-	public static WaterRenderer create(WaterFrameBuffer frameBuffer, WaterShader waterShader, CameraEntity camera) {
-		waterShader.start();
-		waterShader.connectTextureUnits();
-		waterShader.stop();
-		return new WaterRenderer(frameBuffer, camera);
+	public static BackgroundTerrainRenderer create( CameraEntity camera) {
+		return new BackgroundTerrainRenderer(camera);
 	}
 
 	@Override
 	public void render() {
 		for (RenderingParameters params : renderingParams) {
-			WaterShader draw3DShader = (WaterShader) params.getShader();
+			IShader3D draw3DShader = (IShader3D) params.getShader();
 			draw3DShader.start();
 			prepare(params.getVAOGeom().getVaoId());
 			Matrix4f viewMatrix = camera.getViewMatrix();
@@ -51,15 +46,17 @@ private CameraEntity camera;
 	@Override
 	protected void prepare(int vaoId) {
 		GL30.glBindVertexArray(vaoId);
+		//TODO extract those to a ShaderBinder as list so it can be read by prepare and unbind, and make a more generic Renderer 
+		// and Shader with more explicit relation between shader files index and code index.
 		GL20.glEnableVertexAttribArray(VBOIndex.POSITION_INDEX);
-		GL13.glActiveTexture(GL13.GL_TEXTURE0);
-		GL11.glBindTexture(GL11.GL_TEXTURE_2D, frameBuffer.getReflectionTexture());
-		GL13.glActiveTexture(GL13.GL_TEXTURE1);
-		GL11.glBindTexture(GL11.GL_TEXTURE_2D, frameBuffer.getRefractionTexture());
+		GL20.glEnableVertexAttribArray(VBOIndex.TEXTURE_INDEX);
+		GL20.glEnableVertexAttribArray(VBOIndex.NORMAL_INDEX);
 	}
 
 	@Override
 	protected void unbindGeom() {
+		GL20.glDisableVertexAttribArray(VBOIndex.NORMAL_INDEX);
+		GL20.glDisableVertexAttribArray(VBOIndex.TEXTURE_INDEX);
 		GL20.glDisableVertexAttribArray(VBOIndex.POSITION_INDEX);
 		GL30.glBindVertexArray(0);
 	}

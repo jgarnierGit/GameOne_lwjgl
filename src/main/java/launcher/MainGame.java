@@ -5,12 +5,9 @@ import java.util.ArrayList;
 
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL30;
-import org.lwjglx.util.vector.Vector2f;
 import org.lwjglx.util.vector.Vector3f;
 import org.lwjglx.util.vector.Vector4f;
 
-import camera.behavior.CameraFreeFly;
-import entities.GuiTexture;
 import inputListeners.PlayerInputListener;
 import inputListeners.PlayerInputListenerBuilder;
 import logic.CameraCenterOverEntities;
@@ -22,7 +19,6 @@ import models.water.Water;
 import models.water.WaterFrameBuffer;
 import modelsLibrary.SkyboxDayNight;
 import renderEngine.DisplayManager;
-import renderEngine.GuiRenderer;
 import renderEngine.MasterRenderer;
 
 public class MainGame {
@@ -34,17 +30,14 @@ public class MainGame {
 		CameraManager camera = CameraManager.create(playerInputListener, new Vector3f(-20, 20, 50), 20, 45);
 
 		MasterRenderer masterRenderer = MasterRenderer.create(camera.getCamera());
-		Monkey monkey = new Monkey(masterRenderer);
-		Player player = Player.create(playerInputListener, monkey, new Vector3f(-5, 0, 0), 0, 90, 0, 1);
+		Monkey monkey = Monkey.create(masterRenderer);
+		Player player = Player.create(playerInputListener, monkey.getRenderableGeom(), new Vector3f(-5, 0, 0), 0, 90, 0, 1);
 		SkyboxDayNight skybox = SkyboxDayNight.create(masterRenderer, camera.getCamera());
 		// TODO create interface Model3D to guide user for minimal structure
 
-		// TODO put in there while (DisplayManager.isRunning()) { with all logic.
-		GameExecutor gameExecutor = new GameExecutor();
 		// InputListener inputListener = new InputListener();
-		TerrainManager terrainGenerator = TerrainManager.create(masterRenderer, playerInputListener);
+		TerrainManager terrainGenerator = TerrainManager.create(masterRenderer, playerInputListener, camera.getCamera());
 		// gameExecutor.render(masterRenderer,player,terrain);
-		terrainGenerator.initiateTerrain();
 
 		float deltaTime = 0;
 		// FIXME weird to use getter to create cameraBehavior, and maybe not have to use
@@ -54,7 +47,6 @@ public class MainGame {
 		camera.getCameraLockedToEntity(player.getEntity());
 		WaterFrameBuffer waterFrameBuffer = new WaterFrameBuffer();
 		Water water = Water.create(masterRenderer, waterFrameBuffer, camera.getCamera(), "waterVertexShader.txt", "waterFragmentShader.txt");
-		water.initWater();
 		/** example of using FrameBuffer as Gui Texture
 		GuiTexture guiReflection =new GuiTexture(waterFrameBuffer.getReflectionTexture(), new Vector2f(-0.5f,0.5f), new Vector2f(0.25f,0.25f));
 		GuiTexture guiRefraction =new GuiTexture(waterFrameBuffer.getRefractionTexture(), new Vector2f(0.5f,0.5f), new Vector2f(0.25f,0.25f));
@@ -85,9 +77,8 @@ public class MainGame {
 			cameraYawUpdate = (float) Math.sin(cameraYawUpdate) / 5;
 			// camera.updateYaw(cameraYawUpdate);
 			player.move(terrainGenerator, camera);
-			masterRenderer.processEntity(player.getEntity());
 			
-			Vector3f waterPosition = water.getGeoms().get(0).getRenderingParameters().getEntities().get(0).getPositions();
+			Vector3f waterPosition = water.getRenderableGeom().getRenderingParameters().getEntities().get(0).getPositions();
 			
 			//what is inside those 2 methods will be rendered to Frame Buffer Object.
 			waterFrameBuffer.bindReflectionFrameBuffer();
@@ -106,8 +97,7 @@ public class MainGame {
 			
 			GL11.glDisable(GL30.GL_CLIP_DISTANCE0);
 			waterFrameBuffer.unbindCurrentFrameBuffer();
-			//FIXME side effect while rendering twice. should be consistent
-			masterRenderer.render(new ArrayList<>(), new Vector4f(0,-1,0,500));// 500 to avoid any clipping in world
+			masterRenderer.render(new ArrayList<>(), new Vector4f(0,-1,0,0));//to avoid any clipping in world
 	/**
 	 * 		guiRenderer.addGui(guiReflection);
 
