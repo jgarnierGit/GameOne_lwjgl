@@ -19,18 +19,25 @@ private CameraEntity camera;
 		this.camera = camera;
 	}
 	
-	public static BackgroundTerrainRenderer create( CameraEntity camera) {
-		return new BackgroundTerrainRenderer(camera);
+	public static BackgroundTerrainRenderer create(CameraEntity camera,TerrainBackgroundShader shader) {
+	
+				
+		BackgroundTerrainRenderer renderer=	new BackgroundTerrainRenderer(camera);
+		shader.start();
+		shader.connectTextureUnits();
+		shader.stop();
+		return renderer;
 	}
 
 	@Override
 	public void render() {
 		for (RenderingParameters params : renderingParams) {
-			IShader3D draw3DShader = (IShader3D) params.getShader();
+			TerrainBackgroundShader draw3DShader = (TerrainBackgroundShader) params.getShader();
 			draw3DShader.start();
 			prepare(params.getVAOGeom().getVaoId());
 			Matrix4f viewMatrix = camera.getViewMatrix();
 			draw3DShader.loadViewMatrix(viewMatrix);
+			draw3DShader.loadShineVariables(1, 0);
 			//generic part to extract, works also with SkyboxRenderer as its shader doesn't implements transformationMatrix.
 			params.getEntities().forEach(entity -> {
 				Matrix4f transformationM = Maths.createTransformationMatrix(entity.getPositions(), entity.getRotX(),

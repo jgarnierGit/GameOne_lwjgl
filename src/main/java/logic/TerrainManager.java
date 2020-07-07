@@ -15,11 +15,11 @@ import entities.Entity;
 import entities.SimpleEntity;
 import inputListeners.InputInteractable;
 import inputListeners.PlayerInputListener;
+import models.SimpleGeom3D;
+import models.SimpleGeom3DBuilder;
 import models.backgroundTerrain.BackgroundTerrain;
-import modelsLibrary.SimpleGeom3D;
-import modelsLibrary.SimpleGeom3DBuilder;
-import modelsLibrary.terrain.RegularFlatTerrain3D;
-import modelsLibrary.terrain.Terrain3D;
+import models.library.terrain.RegularFlatTerrain3D;
+import models.library.terrain.Terrain3D;
 import renderEngine.MasterRenderer;
 import renderEngine.RenderingParameters;
 import utils.Axis;
@@ -39,7 +39,7 @@ public class TerrainManager extends InputInteractable {
 		TerrainManager terrainManager = new TerrainManager(masterRenderer, inputListener);
 		terrainManager.bindInputHanlder();
 		terrainManager.initiateTerrain();
-	//	terrainManager.initiateGroundTerrain(cameraEntity);
+		terrainManager.initiateGroundTerrain(cameraEntity);
 		return terrainManager;
 	}
 
@@ -49,6 +49,9 @@ public class TerrainManager extends InputInteractable {
 		}
 		SimpleEntity entity = new SimpleEntity(new Vector3f(-50,-20,-50), 0, 0, 0, 1);
 		groundTerrain = BackgroundTerrain.create(masterRenderer, cameraEntity, entity, 100, 30,"heightmap.png");
+		RenderingParameters terrainParameters = groundTerrain.getRenderableGeom().getRenderingParameters();
+		terrainParameters.setRenderMode(GL11.GL_TRIANGLES);
+		masterRenderer.reloadAndprocess(groundTerrain.getRenderableGeom());
 	}
 
 	@Override

@@ -10,9 +10,9 @@ import camera.Camera;
 import camera.CameraEntity;
 import entities.Entity;
 import inputListeners.PlayerInputListener;
-import modelsLibrary.IRenderableGeom;
-import modelsLibrary.VAOGeom;
-import modelsLibrary.terrain.Terrain3D;
+import models.IRenderableGeom;
+import models.data.VAOGeom;
+import models.library.terrain.Terrain3D;
 
 public class CameraCenterOverEntities extends Camera{
 	private Set<Entity> entities;

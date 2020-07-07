@@ -5,13 +5,13 @@ import java.io.IOException;
 import org.lwjgl.opengl.GL11;
 
 import entities.GeomContainer;
-import modelsLibrary.GeomEditor;
-import modelsLibrary.IEditableGeom;
-import modelsLibrary.IRenderableGeom;
-import modelsLibrary.SimpleGeom3D;
-import modelsLibrary.SimpleGeom3DBuilder;
-import modelsLibrary.terrain.Terrain3D;
-import modelsManager.OBJImporter;
+import models.GeomEditor;
+import models.IEditableGeom;
+import models.IRenderableGeom;
+import models.SimpleGeom3D;
+import models.SimpleGeom3DBuilder;
+import models.importer.OBJImporter;
+import models.library.terrain.Terrain3D;
 import renderEngine.MasterRenderer;
 import renderEngine.RenderingParameters;
 

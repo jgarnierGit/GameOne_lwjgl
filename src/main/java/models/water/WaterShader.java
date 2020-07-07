@@ -23,8 +23,7 @@ private int locationViewMatrix;
 	}
 	
 	public static WaterShader create( String vertexFile, String fragmentFile) throws IOException{
-		WaterShader waterShader = new WaterShader(WaterShader.class::getResourceAsStream, vertexFile, fragmentFile);
-		return waterShader;
+		return new WaterShader(WaterShader.class::getResourceAsStream, vertexFile, fragmentFile);
 	}
 
 	@Override
@@ -64,12 +63,6 @@ private int locationViewMatrix;
 	@Override
 	public void loadClipPlane(Vector4f plane) {
 		// Nothing to do.
-		
-	}
-
-	@Override
-	public void setUseImage(boolean useImage) {
-		// TODO Auto-generated method stub
 		
 	}
 }

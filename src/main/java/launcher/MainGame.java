@@ -5,9 +5,11 @@ import java.util.ArrayList;
 
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL30;
+import org.lwjglx.util.vector.Vector2f;
 import org.lwjglx.util.vector.Vector3f;
 import org.lwjglx.util.vector.Vector4f;
 
+import entities.GuiTexture;
 import inputListeners.PlayerInputListener;
 import inputListeners.PlayerInputListenerBuilder;
 import logic.CameraCenterOverEntities;
@@ -15,10 +17,11 @@ import logic.CameraManager;
 import logic.Player;
 import logic.TerrainManager;
 import models.Monkey;
+import models.library.SkyboxDayNight;
 import models.water.Water;
 import models.water.WaterFrameBuffer;
-import modelsLibrary.SkyboxDayNight;
 import renderEngine.DisplayManager;
+import renderEngine.GuiRenderer;
 import renderEngine.MasterRenderer;
 
 public class MainGame {
@@ -47,11 +50,11 @@ public class MainGame {
 		camera.getCameraLockedToEntity(player.getEntity());
 		WaterFrameBuffer waterFrameBuffer = new WaterFrameBuffer();
 		Water water = Water.create(masterRenderer, waterFrameBuffer, camera.getCamera(), "waterVertexShader.txt", "waterFragmentShader.txt");
-		/** example of using FrameBuffer as Gui Texture
+		/** example of using FrameBuffer as Gui Texture **/
 		GuiTexture guiReflection =new GuiTexture(waterFrameBuffer.getReflectionTexture(), new Vector2f(-0.5f,0.5f), new Vector2f(0.25f,0.25f));
 		GuiTexture guiRefraction =new GuiTexture(waterFrameBuffer.getRefractionTexture(), new Vector2f(0.5f,0.5f), new Vector2f(0.25f,0.25f));
 		GuiRenderer guiRenderer = new GuiRenderer(masterRenderer.getLoader());
-		**/
+		/****/
 		while (DisplayManager.isRunning()) {
 			playerInputListener.update();
 			camera.update();
@@ -98,12 +101,11 @@ public class MainGame {
 			GL11.glDisable(GL30.GL_CLIP_DISTANCE0);
 			waterFrameBuffer.unbindCurrentFrameBuffer();
 			masterRenderer.render(new ArrayList<>(), new Vector4f(0,-1,0,0));//to avoid any clipping in world
-	/**
-	 * 		guiRenderer.addGui(guiReflection);
+			guiRenderer.addGui(guiReflection);
 
 			guiRenderer.addGui(guiRefraction);
 			guiRenderer.render();
-				 */
+
 			masterRenderer.clean();
 			DisplayManager.updateDisplay();
 		}

@@ -8,11 +8,11 @@ import org.lwjglx.util.vector.Vector3f;
 import camera.CameraEntity;
 import entities.GeomContainer;
 import entities.SimpleEntity;
-import modelsLibrary.GeomEditor;
-import modelsLibrary.IEditableGeom;
-import modelsLibrary.IRenderableGeom;
-import modelsLibrary.SimpleGeom3D;
-import modelsLibrary.SimpleGeom3DBuilder;
+import models.GeomEditor;
+import models.IEditableGeom;
+import models.IRenderableGeom;
+import models.SimpleGeom3D;
+import models.SimpleGeom3DBuilder;
 import renderEngine.MasterRenderer;
 
 public class Water implements GeomContainer{ 
