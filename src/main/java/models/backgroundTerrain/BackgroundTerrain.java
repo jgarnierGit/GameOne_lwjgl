@@ -16,6 +16,7 @@ import models.IEditableGeom;
 import models.IRenderableGeom;
 import models.SimpleGeom3D;
 import models.SimpleGeom3DBuilder;
+import models.data.BlendedMaterialLibrary;
 import models.data.BlendedMaterialLibraryBuilder;
 import models.library.terrain.RegularElevationTerrain3D;
 import renderEngine.MasterRenderer;
@@ -34,7 +35,7 @@ public class BackgroundTerrain implements GeomContainer{
 		BackgroundTerrainRenderer renderer = BackgroundTerrainRenderer.create(cameraEntity,shader);
 		masterRenderer.addRenderer(renderer);
 		terrain.terrainGeom =  SimpleGeom3DBuilder.create(masterRenderer.getLoader(), renderer, "backgroundTerrain").withShader(shader).withEntity(entity).build();
-		MTLLibrary mtlLibrary = BlendedMaterialLibraryBuilder.create().addTexture("grass.png").addTexture("mud.png")
+		BlendedMaterialLibrary mtlLibrary = BlendedMaterialLibraryBuilder.create().addTexture("grass.png").addTexture("mud.png")
 				.addTexture("grassFlowers.png").addTexture("path.png").addBlendTexturesAndBuild("blendMap.png");
 		RegularElevationTerrain3D.generateRegular(terrain.terrainGeom, Optional.of(mtlLibrary), entity, size, amplitude, heightMap,1);
 		return terrain;
