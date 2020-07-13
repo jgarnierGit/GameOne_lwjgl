@@ -4,7 +4,6 @@ in vec3 position;
 
 out vec4 clipSpace;
 out vec2 textureCoords;
-out vec3 surfaceNormal;
 out vec3 toCameraVector;
 
 uniform mat4 transformationMatrix;

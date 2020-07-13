@@ -36,7 +36,7 @@ public class Water implements GeomContainer{
 		Water water = new Water();
 		WaterShader waterShader = WaterShader.create(vertexFile, fragmentFile);
 		water.renderer = WaterRenderer.create(waterFrameBuffer, waterShader, cameraEntity);
-		SimpleEntity entity = new SimpleEntity(new Vector3f(0,-1,0), 0, 0, 0, 1);
+		SimpleEntity entity = new SimpleEntity(new Vector3f(0,-20,0), 0, 0, 0, 1);
 		
 		water.waterGeom = SimpleGeom3DBuilder.create(masterRenderer,  water.renderer, "water").withShader(waterShader).withEntity(entity).build();
 		/**SimpleMaterialLibrary materials = SimpleMaterialLibrary.create("waterDUDV.png");

@@ -49,7 +49,7 @@ public class TerrainManager extends InputInteractable {
 		if(groundTerrain != null) {
 			return;
 		}
-		SimpleEntity entity = new SimpleEntity(new Vector3f(-50,-1,-50), 0, 0, 0, 1);
+		SimpleEntity entity = new SimpleEntity(new Vector3f(-50,-20,-50), 0, 0, 0, 1);
 		groundTerrain = BackgroundTerrain.create(masterRenderer, cameraEntity, entity, 100, 30,"heightmap.png");
 		RenderingParameters terrainParameters = groundTerrain.getRenderableGeom().getRenderingParameters();
 		terrainParameters.setRenderMode(GL11.GL_TRIANGLES);

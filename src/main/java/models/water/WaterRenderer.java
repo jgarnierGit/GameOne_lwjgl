@@ -16,6 +16,7 @@ import toolbox.Maths;
 public class WaterRenderer extends DrawRenderer{
 
 private WaterFrameBuffer frameBuffer;
+
 //TODO extract in abstract class specific for 3D
 private CameraEntity camera;
 	private WaterRenderer(WaterFrameBuffer frameBuffer, CameraEntity camera) {
@@ -36,7 +37,7 @@ private CameraEntity camera;
 			WaterShader draw3DShader = (WaterShader) params.getShader();
 			draw3DShader.start();
 			prepare(params.getVAOGeom().getVaoId());
-			GL13.glActiveTexture(GL13.GL_TEXTURE2);
+		//	GL13.glActiveTexture(GL13.GL_TEXTURE2);
 		//	GL11.glBindTexture(GL11.GL_TEXTURE_2D, (int) params.getVAOGeom().getTextures().toArray()[0]); //DudvMap
 			
 			Matrix4f viewMatrix = camera.getViewMatrix();
@@ -60,7 +61,7 @@ private CameraEntity camera;
 		GL13.glActiveTexture(GL13.GL_TEXTURE0);
 		GL11.glBindTexture(GL11.GL_TEXTURE_2D, frameBuffer.getReflectionTexture());
 		GL13.glActiveTexture(GL13.GL_TEXTURE1);
-		GL11.glBindTexture(GL11.GL_TEXTURE_2D, frameBuffer.getRefractionTexture());
+		GL11.glBindTexture(GL11.GL_TEXTURE_2D,  frameBuffer.getRefractionTexture());
 	}
 
 	@Override

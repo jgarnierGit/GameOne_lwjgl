@@ -84,47 +84,52 @@ public class MainGame {
 			// camera.updateYaw(cameraYawUpdate);
 			player.move(terrainGenerator, camera);
 			Vector3f waterPosition = water.getRenderableGeom().getRenderingParameters().getEntities().get(0).getPositions();
-			//couldn't been worst
-			Vector4f clipPlane = new Vector4f(0,1,0,1);
-			((BackgroundTerrainRenderer) terrainGenerator.getUnderGroundTerrain().getRenderableGeom().getRenderer()).setClipPlane(clipPlane);
+			Vector4f clipPlane = new Vector4f();
 			
-			//what is inside those 2 methods will be rendered to Frame Buffer Object.
-			waterFrameBuffer.bindReflectionFrameBuffer();
-			float cameraDistanceReflection = 2 * (camera.getCamera().getPosition().y - waterPosition.y);
-			camera.getCamera().getPosition().y -= cameraDistanceReflection;
-			camera.getCamera().invertPitch(); 
-
 			List<GeomContainer> toRender = new ArrayList<>();
 			toRender.addAll(terrainGenerator.getTerrains());
 			toRender.add(terrainGenerator.getUnderGroundTerrain());
 			toRender.add(monkey);
 			toRender.add(skybox);
+			
+			//what is inside those 2 methods will be rendered to Frame Buffer Object.
+			
+			waterFrameBuffer.bindReflectionFrameBuffer();
+			// clip plane upward (0,1,0) for reflection
+			clipPlane = new Vector4f(0,1,0,-waterPosition.y);
+			//couldn't been worst
+			((BackgroundTerrainRenderer) terrainGenerator.getUnderGroundTerrain().getRenderableGeom().getRenderer()).setClipPlane(clipPlane);
+			float cameraDistanceReflection = 2 * (camera.getCamera().getPosition().y - waterPosition.y);
+			camera.getCamera().getPosition().y -= cameraDistanceReflection;
+			camera.getCamera().invertPitch(); 
 			//FIXME yuk... painful to get information from entity...
 			// see math behind plane equation.
 			// new Vector4f(a,b,c,d)
 			//a,b,c = normal plane
 			//d = signed distance from origin
-			
 			masterRenderer.reloadRenderingDatas(new ArrayList<>(), toRender, clipPlane);
-			masterRenderer.render(); //new Vector4f(0,1,0,-waterPosition.y)
-			
+			masterRenderer.render();
+
 			waterFrameBuffer.bindRefractionFrameBuffer();
+			//downward for refraction
+			clipPlane = new Vector4f(0,-1,0,waterPosition.y);
 			camera.getCamera().getPosition().y += cameraDistanceReflection;
 			camera.getCamera().invertPitch();
-			clipPlane = new Vector4f(0,-1,0,-1);
 			((BackgroundTerrainRenderer) terrainGenerator.getUnderGroundTerrain().getRenderableGeom().getRenderer()).setClipPlane(clipPlane);
 			masterRenderer.reloadRenderingDatas(new ArrayList<>(), toRender, clipPlane);
-			masterRenderer.render();//new Vector4f(0,-1,0,waterPosition.y) 
+			masterRenderer.render();
 			
 			// may I add this to rendering parameters? don't know.
 			// manually disable clipping for each renderer using it
+			// some drivers ignore this command so it is required for compatibilities to specify a clip of 0,0,0
 			GL11.glDisable(GL30.GL_CLIP_DISTANCE0);
+			clipPlane =new Vector4f(0,0,0,0);
 			waterFrameBuffer.unbindCurrentFrameBuffer();
 			toRender.add(water);
 			//couldn't been worst
 			((BackgroundTerrainRenderer) terrainGenerator.getUnderGroundTerrain().getRenderableGeom().getRenderer()).setClipPlane(clipPlane);
 			masterRenderer.reloadRenderingDatas(new ArrayList<>(), toRender, clipPlane);
-			masterRenderer.render();//to avoid any clipping in world: new Vector4f(0,-1,0,0)
+			masterRenderer.render();
 			guiRenderer.render();
 			DisplayManager.updateDisplay();
 		}
