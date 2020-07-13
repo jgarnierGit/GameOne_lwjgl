@@ -35,8 +35,9 @@ public class Water implements GeomContainer{
 	public static Water create(MasterRenderer masterRenderer, WaterFrameBuffer waterFrameBuffer, CameraEntity cameraEntity, String vertexFile, String fragmentFile) throws IOException {
 		Water water = new Water();
 		WaterShader waterShader = WaterShader.create(vertexFile, fragmentFile);
-		water.renderer = WaterRenderer.create(waterFrameBuffer, waterShader, cameraEntity);
-		SimpleEntity entity = new SimpleEntity(new Vector3f(0,-20,0), 0, 0, 0, 1);
+		int dudv = masterRenderer.getLoader().loadTexture("waterDUDV.png");
+		water.renderer = WaterRenderer.create(waterFrameBuffer, waterShader, cameraEntity, dudv);
+		SimpleEntity entity = new SimpleEntity(new Vector3f(-50,-20,-50), 0, 0, 0, 100);
 		
 		water.waterGeom = SimpleGeom3DBuilder.create(masterRenderer,  water.renderer, "water").withShader(waterShader).withEntity(entity).build();
 		/**SimpleMaterialLibrary materials = SimpleMaterialLibrary.create("waterDUDV.png");
@@ -51,10 +52,10 @@ public class Water implements GeomContainer{
 		if (!this.waterGeom.getVertices().isEmpty()) {
 			return;
 		}
-		Vector3f leftNear = new Vector3f(-50, 0, -50);
-		Vector3f rightNear = new Vector3f(50, 0, -50);
-		Vector3f rightFar = new Vector3f(50, 0, 50);
-		Vector3f leftFar = new Vector3f(-50, 0, 50);
+		Vector3f leftNear = new Vector3f(0, 0, 0);
+		Vector3f rightNear = new Vector3f(1, 0, 0);
+		Vector3f rightFar = new Vector3f(1, 0, 1);
+		Vector3f leftFar = new Vector3f(0, 0, 1);
 		//TODO addPoint must be unique, and add setFaces which will use indices vertices.
 		this.waterGeom.addPoint(leftNear);
 		this.waterGeom.addPoint(rightFar);

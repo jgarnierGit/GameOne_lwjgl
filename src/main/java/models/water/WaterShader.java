@@ -5,6 +5,7 @@ import java.io.InputStream;
 import java.util.function.Function;
 
 import org.lwjglx.util.vector.Matrix4f;
+import org.lwjglx.util.vector.Vector3f;
 import org.lwjglx.util.vector.Vector4f;
 
 import renderEngine.Loader.VBOIndex;
@@ -14,11 +15,15 @@ import shaderManager.ShaderProgram;
 public class WaterShader extends ShaderProgram implements IShader3D{
 private int locationReflectionTexture;
 private int locationRefractionTexture;
+private int locationDudvMap;
+private int locationMoveFactor;
+
 //TODO try to extract this part
 private int transformationMatrix;
 private int projectionMatrix;
 private int locationViewMatrix;
-//private int locationDudvMap;
+private int locationCameraPosition;
+
 	
 	private WaterShader(Function<String, InputStream> consumer, String vertexFile, String fragmentFile) throws IOException {
 		super(consumer, vertexFile, fragmentFile);
@@ -36,7 +41,7 @@ private int locationViewMatrix;
 	public void connectTextureUnits() {
 		super.loadInt(locationReflectionTexture, 0);
 		super.loadInt(locationRefractionTexture, 1);
-	//	super.loadInt(locationDudvMap,2);
+		super.loadInt(locationDudvMap,2);
 	}
 
 	@Override
@@ -47,7 +52,9 @@ private int locationViewMatrix;
 		locationViewMatrix = super.getUniformLocation("viewMatrix");
 		this.locationReflectionTexture = this.getUniformLocation("reflectionTexture");
 		this.locationRefractionTexture = this.getUniformLocation("refractionTexture");
-		//this.locationDudvMap = this.getUniformLocation("dudvMap");
+		this.locationDudvMap = this.getUniformLocation("dudvMap");
+		this.locationMoveFactor = this.getUniformLocation("moveFactor");
+		this.locationCameraPosition =  this.getUniformLocation("cameraPosition"); 
 	}
 	//TODO try to extract this common 3D part.
 	public void loadTransformationMatrix(Matrix4f transformation) {
@@ -60,6 +67,14 @@ private int locationViewMatrix;
 	//TODO try to extract this common 3D part.
 	public void loadViewMatrix(Matrix4f viewMatrix) {
 		super.loadMatrix(locationViewMatrix, viewMatrix);
+	}
+	
+	public void loadCameraPosition(Vector3f position) {
+		super.loadVector(this.locationCameraPosition, position);
+	}
+	
+	public void loadMovmentFactor(float factor) {
+		super.loadFloat(locationMoveFactor, factor);
 	}
 
 	@Override

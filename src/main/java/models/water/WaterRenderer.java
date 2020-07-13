@@ -8,6 +8,7 @@ import org.lwjglx.util.vector.Matrix4f;
 
 import camera.CameraEntity;
 import models.data.OBJContent;
+import renderEngine.DisplayManager;
 import renderEngine.DrawRenderer;
 import renderEngine.Loader.VBOIndex;
 import renderEngine.RenderingParameters;
@@ -16,19 +17,25 @@ import toolbox.Maths;
 public class WaterRenderer extends DrawRenderer{
 
 private WaterFrameBuffer frameBuffer;
+private static final float WAVE_SPEED = 0.03f;
+
+private float moveFactor =0;
+
+private int dudv;
 
 //TODO extract in abstract class specific for 3D
 private CameraEntity camera;
-	private WaterRenderer(WaterFrameBuffer frameBuffer, CameraEntity camera) {
+	private WaterRenderer(WaterFrameBuffer frameBuffer, CameraEntity camera, int dudv) {
 		this.frameBuffer = frameBuffer;
 		this.camera = camera;
+		this.dudv = dudv;
 	}
 	
-	public static WaterRenderer create(WaterFrameBuffer frameBuffer, WaterShader waterShader, CameraEntity camera) {
+	public static WaterRenderer create(WaterFrameBuffer frameBuffer, WaterShader waterShader, CameraEntity camera, int dudv) {
 		waterShader.start();
 		waterShader.connectTextureUnits();
 		waterShader.stop();
-		return new WaterRenderer(frameBuffer, camera);
+		return new WaterRenderer(frameBuffer, camera, dudv);
 	}
 
 	@Override
@@ -36,12 +43,16 @@ private CameraEntity camera;
 		for (RenderingParameters params : renderingParams) {
 			WaterShader draw3DShader = (WaterShader) params.getShader();
 			draw3DShader.start();
+			moveFactor += WAVE_SPEED * DisplayManager.getFrameTimeSeconds();
+			moveFactor %=1;
+			draw3DShader.loadMovmentFactor(moveFactor);
 			prepare(params.getVAOGeom().getVaoId());
 		//	GL13.glActiveTexture(GL13.GL_TEXTURE2);
 		//	GL11.glBindTexture(GL11.GL_TEXTURE_2D, (int) params.getVAOGeom().getTextures().toArray()[0]); //DudvMap
 			
 			Matrix4f viewMatrix = camera.getViewMatrix();
 			draw3DShader.loadViewMatrix(viewMatrix);
+			draw3DShader.loadCameraPosition(camera.getPosition());
 			//generic part to extract, works also with SkyboxRenderer as its shader doesn't implements transformationMatrix.
 			params.getEntities().forEach(entity -> {
 				Matrix4f transformationM = Maths.createTransformationMatrix(entity.getPositions(), entity.getRotX(),
@@ -62,6 +73,8 @@ private CameraEntity camera;
 		GL11.glBindTexture(GL11.GL_TEXTURE_2D, frameBuffer.getReflectionTexture());
 		GL13.glActiveTexture(GL13.GL_TEXTURE1);
 		GL11.glBindTexture(GL11.GL_TEXTURE_2D,  frameBuffer.getRefractionTexture());
+		GL13.glActiveTexture(GL13.GL_TEXTURE2);
+		GL11.glBindTexture(GL11.GL_TEXTURE_2D,  this.dudv);
 	}
 
 	@Override

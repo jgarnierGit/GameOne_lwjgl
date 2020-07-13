@@ -8,26 +8,35 @@ out vec4 out_Color;
 
 uniform sampler2D reflectionTexture;
 uniform sampler2D refractionTexture;
-//uniform sampler2D dudvMap;
+uniform sampler2D dudvMap;
+uniform float moveFactor;
+
+const float waveStrength = 0.02;
 
 void main(void) {
 
-	vec3 unitNormal = normalize(vec3(0,-1,0)); //water normal resuming it to its simplest form
+	vec3 unitNormal = normalize(vec3(0.0,1.0,0.0)); //water normal resuming it to its simplest form
 	vec3 unitVectorToCamera = normalize(toCameraVector);
 
 	vec2 ndc = (clipSpace.xy/clipSpace.w) / 2.0 + 0.5;// converting in screen coordinates
 	vec2 refractTexCoords = vec2(ndc.x, ndc.y);
 	vec2 reflectTexCoords = vec2(ndc.x, -ndc.y);
 	
-	//vec2 distortion1 = texture(dudvMap, vec2(textureCoords.x, textureCoords.y)).rg * 2.0 -1.0;
-	//refractTexCoords += distortion1;
-	//reflectTexCoords += distortion1;
-	
-	float nDot1 = dot(unitVectorToCamera,unitNormal) / dot(unitNormal,unitNormal);
+	// changin coordinates system oring + applyin water transformation
+	vec2 distortion1 = (texture(dudvMap, vec2(textureCoords.x + moveFactor, textureCoords.y)).rg * 2.0 -1.0) * waveStrength;
+	vec2 distortion2 = (texture(dudvMap, vec2(-textureCoords.x + moveFactor, textureCoords.y+ moveFactor)).rg * 2.0 -1.0) * waveStrength;
+	vec2 finalDistorsion = distortion1 + distortion2;
+	refractTexCoords += finalDistorsion;
+	refractTexCoords = clamp(refractTexCoords, 0.001, 0.999);// avoid glitch at screen limit
+	reflectTexCoords += finalDistorsion;
+	reflectTexCoords.x = clamp(reflectTexCoords.x, 0.001, 0.999); // avoid glitch at screen limit
+	reflectTexCoords.y = clamp(reflectTexCoords.y,-0.999, -0.001);// avoid glitch at screen limit
+	float fresnelDelta = dot(unitVectorToCamera,unitNormal);
+	fresnelDelta = pow(fresnelDelta, 10.0); // change reflectivness
 	
 	vec4 reflectColour = texture(reflectionTexture,reflectTexCoords);
 	vec4 refractColour = texture(refractionTexture,refractTexCoords);
-	out_Color = mix(reflectColour,refractColour,0.5);
-	//out_Color = mix(vec4(0.0, 0.0, 1.0, 0.8), reflectColour, 0.5);
+	vec4 waterColor = mix(reflectColour,refractColour,fresnelDelta);
+	out_Color = mix(vec4(0.0, 0.0, 1.0, 0.8), waterColor, 0.95);
 
 }
