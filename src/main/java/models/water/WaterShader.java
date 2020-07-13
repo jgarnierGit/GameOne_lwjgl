@@ -17,6 +17,7 @@ private int locationRefractionTexture;
 private int transformationMatrix;
 private int projectionMatrix;
 private int locationViewMatrix;
+private int locationDudvMap;
 	
 	private WaterShader(Function<String, InputStream> consumer, String vertexFile, String fragmentFile) throws IOException {
 		super(consumer, vertexFile, fragmentFile);
@@ -33,11 +34,13 @@ private int locationViewMatrix;
 		this.locationViewMatrix = this.getUniformLocation("projectionMatrix");
 		this.locationReflectionTexture = this.getUniformLocation("reflectionTexture");
 		this.locationRefractionTexture = this.getUniformLocation("refractionTexture");
+		this.locationDudvMap = this.getUniformLocation("dudvMap");
 	}
 	
 	public void connectTextureUnits() {
 		super.loadInt(locationReflectionTexture, 0);
 		super.loadInt(locationRefractionTexture, 1);
+		super.loadInt(locationDudvMap,2);
 	}
 
 	@Override

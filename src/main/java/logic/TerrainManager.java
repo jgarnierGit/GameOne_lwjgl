@@ -2,6 +2,7 @@ package logic;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ThreadLocalRandom;
@@ -12,6 +13,7 @@ import org.lwjglx.util.vector.Vector3f;
 
 import camera.CameraEntity;
 import entities.Entity;
+import entities.GeomContainer;
 import entities.SimpleEntity;
 import inputListeners.InputInteractable;
 import inputListeners.PlayerInputListener;
@@ -47,11 +49,10 @@ public class TerrainManager extends InputInteractable {
 		if(groundTerrain != null) {
 			return;
 		}
-		SimpleEntity entity = new SimpleEntity(new Vector3f(-50,-20,-50), 0, 0, 0, 1);
+		SimpleEntity entity = new SimpleEntity(new Vector3f(-50,-1,-50), 0, 0, 0, 1);
 		groundTerrain = BackgroundTerrain.create(masterRenderer, cameraEntity, entity, 100, 30,"heightmap.png");
 		RenderingParameters terrainParameters = groundTerrain.getRenderableGeom().getRenderingParameters();
 		terrainParameters.setRenderMode(GL11.GL_TRIANGLES);
-		masterRenderer.reloadAndprocess(groundTerrain.getRenderableGeom());
 	}
 
 	@Override
@@ -71,7 +72,6 @@ public class TerrainManager extends InputInteractable {
 		float y = (float) ThreadLocalRandom.current().nextDouble(-10, 30); // elevation
 		float z = (float) ThreadLocalRandom.current().nextDouble(-30, 30);
 		terrains.get(0).getRenderableGeom().getRenderingParameters().addEntity(new Vector3f(x, y, z), 0, 0, 0, 1);
-		prepareForRender();
 	}
 
 	private void initiateTerrain() throws IOException {
@@ -79,22 +79,18 @@ public class TerrainManager extends InputInteractable {
 			return;
 		}
 		SimpleEntity entity = new SimpleEntity(new Vector3f(0, 0, 0), 0, 0, 0, 1);
-		SimpleGeom3D terrainGeom =  SimpleGeom3DBuilder.create(masterRenderer.getLoader(), masterRenderer.get3DRenderer(), "terrain").withDefaultShader().withEntity(entity).build();
+		SimpleGeom3D terrainGeom =  SimpleGeom3DBuilder.create(masterRenderer, masterRenderer.getDefault3DRenderer(), "terrain").withDefaultShader().withEntity(entity).build();
 		RegularFlatTerrain3D terrain = RegularFlatTerrain3D.generateRegular(terrainGeom, entity, 10);
 		setupTerrain(terrain);
 		terrains.add(terrain);
-		prepareForRender();
 	}
 
 	public List<Terrain3D> getTerrains() {
 		return this.terrains;
 	}
-
-	public void prepareForRender() { // TODO try to automate this part. try using visitor
-		for (Terrain3D terrain : terrains) {
-			masterRenderer.reloadAndprocess(terrain.getRenderableGeom());
-		}
-		masterRenderer.sendForRendering();
+	
+	public BackgroundTerrain getUnderGroundTerrain() {
+		return groundTerrain;
 	}
 
 	private void setupTerrain(Terrain3D terrain) {
@@ -102,7 +98,6 @@ public class TerrainManager extends InputInteractable {
 		// TODO hide from this interface.
 		// terrainParameters.disableRenderOptions();
 		terrainParameters.setRenderMode(GL11.GL_TRIANGLES);
-		terrain.getEditableGeom().invertNormals();
 	}
 
 	/**
@@ -139,5 +134,4 @@ public class TerrainManager extends InputInteractable {
 		return entity.getPositions().x >= worldNearLeft.x && entity.getPositions().x <= worldFarRight.x
 				&& entity.getPositions().z >= worldNearLeft.z && entity.getPositions().z <= worldFarRight.z;
 	}
-
 }

@@ -3,14 +3,9 @@ package models.backgroundTerrain;
 import java.io.IOException;
 import java.util.Optional;
 
-import org.lwjglx.util.vector.Vector3f;
-
-import com.mokiat.data.front.parser.MTLLibrary;
-
 import camera.CameraEntity;
 import entities.Entity;
 import entities.GeomContainer;
-import entities.SimpleEntity;
 import models.GeomEditor;
 import models.IEditableGeom;
 import models.IRenderableGeom;
@@ -33,11 +28,11 @@ public class BackgroundTerrain implements GeomContainer{
 		BackgroundTerrain terrain = new BackgroundTerrain();
 		TerrainBackgroundShader shader = TerrainBackgroundShader.create();
 		BackgroundTerrainRenderer renderer = BackgroundTerrainRenderer.create(cameraEntity,shader);
-		masterRenderer.addRenderer(renderer);
-		terrain.terrainGeom =  SimpleGeom3DBuilder.create(masterRenderer.getLoader(), renderer, "backgroundTerrain").withShader(shader).withEntity(entity).build();
+		//TODO add OBJContent directly to SimpleGeom3DBuilder ? maybe hard to adapt for terrain...
+		terrain.terrainGeom =  SimpleGeom3DBuilder.create(masterRenderer, renderer, "backgroundTerrain").withShader(shader).withEntity(entity).build();
 		BlendedMaterialLibrary mtlLibrary = BlendedMaterialLibraryBuilder.create().addTexture("grass.png").addTexture("mud.png")
 				.addTexture("grassFlowers.png").addTexture("path.png").addBlendTexturesAndBuild("blendMap.png");
-		RegularElevationTerrain3D.generateRegular(terrain.terrainGeom, Optional.of(mtlLibrary), entity, size, amplitude, heightMap,1);
+		RegularElevationTerrain3D.generateAndLoadRegular(terrain.terrainGeom, Optional.of(mtlLibrary), entity, size, amplitude, heightMap,1);
 		return terrain;
 	}
 	

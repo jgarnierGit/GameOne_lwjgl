@@ -36,10 +36,13 @@ public class Water implements GeomContainer{
 		Water water = new Water();
 		WaterShader waterShader = WaterShader.create(vertexFile, fragmentFile);
 		water.renderer = WaterRenderer.create(waterFrameBuffer, waterShader, cameraEntity);
-		masterRenderer.addRenderer(water.renderer);
-		SimpleEntity entity = new SimpleEntity(new Vector3f(0,-20,0), 0, 0, 0, 1);
+		SimpleEntity entity = new SimpleEntity(new Vector3f(0,-1,0), 0, 0, 0, 1);
 		
-		water.waterGeom = SimpleGeom3DBuilder.create(masterRenderer.getLoader(),  water.renderer, "water").withShader(waterShader).withEntity(entity).build();
+		water.waterGeom = SimpleGeom3DBuilder.create(masterRenderer,  water.renderer, "water").withShader(waterShader).withEntity(entity).build();
+		/**SimpleMaterialLibrary materials = SimpleMaterialLibrary.create("waterDUDV.png");
+		water.waterGeom.getObjContent().setMaterials(materials); //we can add texture without any uv... i can propose a simple uv but only for square.. and i don't want to reimplement a uv mapper;
+		//try to not use uv...
+		water.waterGeom.getVAOGeom().loadTextures();**/
 		water.initWater();
 		return water;
 	}
@@ -63,10 +66,7 @@ public class Water implements GeomContainer{
 		this.waterGeom.addPoint(rightFar);
 		
 		this.waterGeom.getRenderingParameters().setRenderMode(GL11.GL_TRIANGLES);
-		
-		//TODO hide this part?
-		renderer.reloadAndprocess(this.waterGeom);
-		renderer.sendForRendering();
+		renderer.reloadGeomToVAO(this.waterGeom);
 	}
 
 	@Override

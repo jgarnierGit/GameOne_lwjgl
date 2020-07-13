@@ -3,6 +3,7 @@ package models.backgroundTerrain;
 import org.lwjgl.opengl.GL20;
 import org.lwjgl.opengl.GL30;
 import org.lwjglx.util.vector.Matrix4f;
+import org.lwjglx.util.vector.Vector4f;
 
 import camera.CameraEntity;
 import renderEngine.DrawRenderer;
@@ -14,7 +15,7 @@ import toolbox.Maths;
 public class BackgroundTerrainRenderer extends DrawRenderer{
 //TODO extract in abstract class specific for 3D
 private CameraEntity camera;
-
+private Vector4f clipPlane;
 	private BackgroundTerrainRenderer(CameraEntity camera) {
 		this.camera = camera;
 	}
@@ -28,12 +29,17 @@ private CameraEntity camera;
 		shader.stop();
 		return renderer;
 	}
+	
+	public void setClipPlane(Vector4f vector4f) {
+		this.clipPlane = vector4f;
+	}
 
 	@Override
 	public void render() {
 		for (RenderingParameters params : renderingParams) {
 			TerrainBackgroundShader draw3DShader = (TerrainBackgroundShader) params.getShader();
 			draw3DShader.start();
+			draw3DShader.loadClipPlane(this.clipPlane);
 			prepare(params.getVAOGeom().getVaoId());
 			Matrix4f viewMatrix = camera.getViewMatrix();
 			draw3DShader.loadViewMatrix(viewMatrix);

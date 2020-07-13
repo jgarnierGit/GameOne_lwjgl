@@ -2,6 +2,8 @@ package launcher;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL30;
@@ -9,6 +11,7 @@ import org.lwjglx.util.vector.Vector2f;
 import org.lwjglx.util.vector.Vector3f;
 import org.lwjglx.util.vector.Vector4f;
 
+import entities.GeomContainer;
 import entities.GuiTexture;
 import inputListeners.PlayerInputListener;
 import inputListeners.PlayerInputListenerBuilder;
@@ -17,10 +20,14 @@ import logic.CameraManager;
 import logic.Player;
 import logic.TerrainManager;
 import models.Monkey;
+import models.backgroundTerrain.BackgroundTerrainRenderer;
+import models.backgroundTerrain.TerrainBackgroundShader;
 import models.library.SkyboxDayNight;
 import models.water.Water;
 import models.water.WaterFrameBuffer;
 import renderEngine.DisplayManager;
+import renderEngine.Draw3DRenderer;
+import renderEngine.DrawRenderer;
 import renderEngine.GuiRenderer;
 import renderEngine.MasterRenderer;
 
@@ -38,7 +45,6 @@ public class MainGame {
 		SkyboxDayNight skybox = SkyboxDayNight.create(masterRenderer, camera.getCamera());
 		// TODO create interface Model3D to guide user for minimal structure
 
-		// InputListener inputListener = new InputListener();
 		TerrainManager terrainGenerator = TerrainManager.create(masterRenderer, playerInputListener, camera.getCamera());
 		// gameExecutor.render(masterRenderer,player,terrain);
 
@@ -54,21 +60,18 @@ public class MainGame {
 		GuiTexture guiReflection =new GuiTexture(waterFrameBuffer.getReflectionTexture(), new Vector2f(-0.5f,0.5f), new Vector2f(0.25f,0.25f));
 		GuiTexture guiRefraction =new GuiTexture(waterFrameBuffer.getRefractionTexture(), new Vector2f(0.5f,0.5f), new Vector2f(0.25f,0.25f));
 		GuiRenderer guiRenderer = new GuiRenderer(masterRenderer.getLoader());
+		guiRenderer.addGui(guiReflection);
+		guiRenderer.addGui(guiRefraction);
 		/****/
 		while (DisplayManager.isRunning()) {
 			playerInputListener.update();
 			camera.update();
 			// Tuto ClippingPlane 
 			GL11.glEnable(GL30.GL_CLIP_DISTANCE0);
-			// FIXME maybe it was a mistake to update once per frame viewMatrix?
-			// need to find a way to update it once every transformation on camera are done.
-			// (includes InputListener / gameLogic...)
-			// some inputListener need viewMatrix value. (aka freeFlyCamera.)
 			camera.updateViewMatrix();
 
 			deltaTime += DisplayManager.getFrameTimeSeconds();
 			if (deltaTime > 2) {
-				// charge la donnée en mémoire au fur et à mesure des instanciations. peut-être le faire une fois juste avant le rendu.
 				terrainGenerator.addTerrain();
 				deltaTime = 0;
 				if (camera.getActiveCameraBehavior() instanceof CameraCenterOverEntities) {
@@ -80,33 +83,49 @@ public class MainGame {
 			cameraYawUpdate = (float) Math.sin(cameraYawUpdate) / 5;
 			// camera.updateYaw(cameraYawUpdate);
 			player.move(terrainGenerator, camera);
-			
 			Vector3f waterPosition = water.getRenderableGeom().getRenderingParameters().getEntities().get(0).getPositions();
+			//couldn't been worst
+			Vector4f clipPlane = new Vector4f(0,1,0,1);
+			((BackgroundTerrainRenderer) terrainGenerator.getUnderGroundTerrain().getRenderableGeom().getRenderer()).setClipPlane(clipPlane);
 			
 			//what is inside those 2 methods will be rendered to Frame Buffer Object.
 			waterFrameBuffer.bindReflectionFrameBuffer();
 			float cameraDistanceReflection = 2 * (camera.getCamera().getPosition().y - waterPosition.y);
 			camera.getCamera().getPosition().y -= cameraDistanceReflection;
-			camera.getCamera().invertPitch();
+			camera.getCamera().invertPitch(); 
+
+			List<GeomContainer> toRender = new ArrayList<>();
+			toRender.addAll(terrainGenerator.getTerrains());
+			toRender.add(terrainGenerator.getUnderGroundTerrain());
+			toRender.add(monkey);
+			toRender.add(skybox);
 			//FIXME yuk... painful to get information from entity...
 			// see math behind plane equation.
-			masterRenderer.render(new ArrayList<>(), new Vector4f(0,1,0,-waterPosition.y));
+			// new Vector4f(a,b,c,d)
+			//a,b,c = normal plane
+			//d = signed distance from origin
+			
+			masterRenderer.reloadRenderingDatas(new ArrayList<>(), toRender, clipPlane);
+			masterRenderer.render(); //new Vector4f(0,1,0,-waterPosition.y)
 			
 			waterFrameBuffer.bindRefractionFrameBuffer();
 			camera.getCamera().getPosition().y += cameraDistanceReflection;
 			camera.getCamera().invertPitch();
-			masterRenderer.render(new ArrayList<>(), new Vector4f(0,-1,0,waterPosition.y));
+			clipPlane = new Vector4f(0,-1,0,-1);
+			((BackgroundTerrainRenderer) terrainGenerator.getUnderGroundTerrain().getRenderableGeom().getRenderer()).setClipPlane(clipPlane);
+			masterRenderer.reloadRenderingDatas(new ArrayList<>(), toRender, clipPlane);
+			masterRenderer.render();//new Vector4f(0,-1,0,waterPosition.y) 
 			
-			
+			// may I add this to rendering parameters? don't know.
+			// manually disable clipping for each renderer using it
 			GL11.glDisable(GL30.GL_CLIP_DISTANCE0);
 			waterFrameBuffer.unbindCurrentFrameBuffer();
-			masterRenderer.render(new ArrayList<>(), new Vector4f(0,-1,0,0));//to avoid any clipping in world
-			guiRenderer.addGui(guiReflection);
-
-			guiRenderer.addGui(guiRefraction);
+			toRender.add(water);
+			//couldn't been worst
+			((BackgroundTerrainRenderer) terrainGenerator.getUnderGroundTerrain().getRenderableGeom().getRenderer()).setClipPlane(clipPlane);
+			masterRenderer.reloadRenderingDatas(new ArrayList<>(), toRender, clipPlane);
+			masterRenderer.render();//to avoid any clipping in world: new Vector4f(0,-1,0,0)
 			guiRenderer.render();
-
-			masterRenderer.clean();
 			DisplayManager.updateDisplay();
 		}
 		playerInputListener.clear();
