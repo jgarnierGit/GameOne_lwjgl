@@ -2,8 +2,10 @@ package models.backgroundTerrain;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.NotActiveException;
 import java.util.function.Function;
 
+import org.apache.commons.lang3.NotImplementedException;
 import org.lwjglx.util.vector.Matrix4f;
 import org.lwjglx.util.vector.Vector3f;
 import org.lwjglx.util.vector.Vector4f;
@@ -98,6 +100,26 @@ public class TerrainBackgroundShader extends ShaderProgram implements IShader3D 
 	public void loadSkyColour(float red, float green, float blue) {
 		super.loadVector(locationSkyColour, new Vector3f(red, green, blue));
 
+	}
+
+	@Override
+	public int getColorShaderIndex() {
+		throw new NotImplementedException();
+	}
+
+	@Override
+	public int getTextureShaderIndex() {
+		return VBOIndex.TEXTURE_INDEX;
+	}
+
+	@Override
+	public int getPositionShaderIndex() {
+		return VBOIndex.POSITION_INDEX;
+	}
+
+	@Override
+	public int getNormalShaderIndex() {
+		return VBOIndex.NORMAL_INDEX;
 	}
 
 }

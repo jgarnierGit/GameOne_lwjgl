@@ -2,7 +2,6 @@ package launcher;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import org.lwjgl.opengl.GL11;
@@ -13,6 +12,7 @@ import org.lwjglx.util.vector.Vector4f;
 
 import entities.GeomContainer;
 import entities.GuiTexture;
+import entities.Light;
 import inputListeners.PlayerInputListener;
 import inputListeners.PlayerInputListenerBuilder;
 import logic.CameraCenterOverEntities;
@@ -21,13 +21,10 @@ import logic.Player;
 import logic.TerrainManager;
 import models.Monkey;
 import models.backgroundTerrain.BackgroundTerrainRenderer;
-import models.backgroundTerrain.TerrainBackgroundShader;
 import models.library.SkyboxDayNight;
 import models.water.Water;
 import models.water.WaterFrameBuffer;
 import renderEngine.DisplayManager;
-import renderEngine.Draw3DRenderer;
-import renderEngine.DrawRenderer;
 import renderEngine.GuiRenderer;
 import renderEngine.MasterRenderer;
 
@@ -55,7 +52,8 @@ public class MainGame {
 		camera.getFreeFlyCamera();
 		camera.getCameraLockedToEntity(player.getEntity());
 		WaterFrameBuffer waterFrameBuffer = new WaterFrameBuffer();
-		Water water = Water.create(masterRenderer, waterFrameBuffer, camera.getCamera(), "waterVertexShader.txt", "waterFragmentShader.txt");
+		Light sun = new Light(new Vector3f(-30.0f,100.0f,-100.0f), new Vector3f(1.0f,0.95f,1.0f));
+		Water water = Water.create(masterRenderer, waterFrameBuffer, camera.getCamera(), sun, "waterVertexShader.txt", "waterFragmentShader.txt");
 		/** example of using FrameBuffer as Gui Texture **/
 		GuiTexture guiReflection =new GuiTexture(waterFrameBuffer.getReflectionTexture(), new Vector2f(-0.5f,0.5f), new Vector2f(0.25f,0.25f));
 		GuiTexture guiRefraction =new GuiTexture(waterFrameBuffer.getRefractionTexture(), new Vector2f(0.5f,0.5f), new Vector2f(0.25f,0.25f));
@@ -96,7 +94,7 @@ public class MainGame {
 			
 			waterFrameBuffer.bindReflectionFrameBuffer();
 			// clip plane upward (0,1,0) for reflection
-			clipPlane = new Vector4f(0,1,0,-waterPosition.y);
+			clipPlane = new Vector4f(0,1,0,-waterPosition.y+0.1f);
 			//couldn't been worst
 			((BackgroundTerrainRenderer) terrainGenerator.getUnderGroundTerrain().getRenderableGeom().getRenderer()).setClipPlane(clipPlane);
 			float cameraDistanceReflection = 2 * (camera.getCamera().getPosition().y - waterPosition.y);

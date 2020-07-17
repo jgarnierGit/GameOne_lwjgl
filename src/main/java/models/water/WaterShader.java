@@ -4,10 +4,12 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.function.Function;
 
+import org.apache.commons.lang3.NotImplementedException;
 import org.lwjglx.util.vector.Matrix4f;
 import org.lwjglx.util.vector.Vector3f;
 import org.lwjglx.util.vector.Vector4f;
 
+import entities.Light;
 import renderEngine.Loader.VBOIndex;
 import shaderManager.IShader3D;
 import shaderManager.ShaderProgram;
@@ -17,6 +19,10 @@ private int locationReflectionTexture;
 private int locationRefractionTexture;
 private int locationDudvMap;
 private int locationMoveFactor;
+private int locationNormalMap;
+private int locationLightPosition;
+private int locationLightColor;
+private int locationDepthMap;
 
 //TODO try to extract this part
 private int transformationMatrix;
@@ -42,6 +48,8 @@ private int locationCameraPosition;
 		super.loadInt(locationReflectionTexture, 0);
 		super.loadInt(locationRefractionTexture, 1);
 		super.loadInt(locationDudvMap,2);
+		super.loadInt(locationNormalMap, 3);
+		super.loadInt(locationDepthMap, 4);
 	}
 
 	@Override
@@ -55,6 +63,10 @@ private int locationCameraPosition;
 		this.locationDudvMap = this.getUniformLocation("dudvMap");
 		this.locationMoveFactor = this.getUniformLocation("moveFactor");
 		this.locationCameraPosition =  this.getUniformLocation("cameraPosition"); 
+		this.locationNormalMap = this.getUniformLocation("normalMap"); 
+		this.locationLightPosition = this.getUniformLocation("lightPosition"); 
+		this.locationLightColor = this.getUniformLocation("lightColour"); 
+		this.locationDepthMap = this.getUniformLocation("depthMap"); 
 	}
 	//TODO try to extract this common 3D part.
 	public void loadTransformationMatrix(Matrix4f transformation) {
@@ -73,6 +85,11 @@ private int locationCameraPosition;
 		super.loadVector(this.locationCameraPosition, position);
 	}
 	
+	public void loadLight(Light light) {
+		super.loadVector(locationLightPosition, light.getPosition());
+		super.loadVector(locationLightColor, light.getColour());
+	}
+	
 	public void loadMovmentFactor(float factor) {
 		super.loadFloat(locationMoveFactor, factor);
 	}
@@ -81,5 +98,25 @@ private int locationCameraPosition;
 	public void loadClipPlane(Vector4f plane) {
 		// Nothing to do.
 		
+	}
+
+	@Override
+	public int getColorShaderIndex() {
+		throw new NotImplementedException();
+	}
+
+	@Override
+	public int getTextureShaderIndex() {
+		throw new NotImplementedException();
+	}
+
+	@Override
+	public int getPositionShaderIndex() {
+		return VBOIndex.POSITION_INDEX;
+	}
+
+	@Override
+	public int getNormalShaderIndex() {
+		throw new NotImplementedException();
 	}
 }

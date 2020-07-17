@@ -7,10 +7,11 @@ import org.lwjglx.util.vector.Vector3f;
 
 import camera.CameraEntity;
 import entities.GeomContainer;
+import entities.Light;
 import entities.SimpleEntity;
 import models.GeomEditor;
-import models.IEditableGeom;
-import models.IRenderableGeom;
+import models.EditableGeom;
+import models.RenderableGeom;
 import models.SimpleGeom3D;
 import models.SimpleGeom3DBuilder;
 import renderEngine.MasterRenderer;
@@ -32,11 +33,12 @@ public class Water implements GeomContainer{
 	 * @return
 	 * @throws IOException 
 	 */
-	public static Water create(MasterRenderer masterRenderer, WaterFrameBuffer waterFrameBuffer, CameraEntity cameraEntity, String vertexFile, String fragmentFile) throws IOException {
+	public static Water create(MasterRenderer masterRenderer, WaterFrameBuffer waterFrameBuffer, CameraEntity cameraEntity, Light sun, String vertexFile, String fragmentFile) throws IOException {
 		Water water = new Water();
 		WaterShader waterShader = WaterShader.create(vertexFile, fragmentFile);
 		int dudv = masterRenderer.getLoader().loadTexture("waterDUDV.png");
-		water.renderer = WaterRenderer.create(waterFrameBuffer, waterShader, cameraEntity, dudv);
+		int normalMap = masterRenderer.getLoader().loadTexture("normalMap.png");
+		water.renderer = WaterRenderer.create(waterFrameBuffer, waterShader, cameraEntity, dudv, normalMap, sun);
 		SimpleEntity entity = new SimpleEntity(new Vector3f(-50,-20,-50), 0, 0, 0, 100);
 		
 		water.waterGeom = SimpleGeom3DBuilder.create(masterRenderer,  water.renderer, "water").withShader(waterShader).withEntity(entity).build();
@@ -71,12 +73,12 @@ public class Water implements GeomContainer{
 	}
 
 	@Override
-	public IEditableGeom getEditableGeom() {
+	public EditableGeom getEditableGeom() {
 		return waterGeom;
 	}
 
 	@Override
-	public IRenderableGeom getRenderableGeom() {
+	public RenderableGeom getRenderableGeom() {
 		return waterGeom;
 	}
 

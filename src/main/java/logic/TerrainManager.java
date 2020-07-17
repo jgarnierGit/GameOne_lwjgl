@@ -2,7 +2,6 @@ package logic;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ThreadLocalRandom;
@@ -13,13 +12,14 @@ import org.lwjglx.util.vector.Vector3f;
 
 import camera.CameraEntity;
 import entities.Entity;
-import entities.GeomContainer;
 import entities.SimpleEntity;
 import inputListeners.InputInteractable;
 import inputListeners.PlayerInputListener;
 import models.SimpleGeom3D;
 import models.SimpleGeom3DBuilder;
 import models.backgroundTerrain.BackgroundTerrain;
+import models.data.AtlasMaterialLibraryBuilder;
+import models.data.MaterialLibrary;
 import models.library.terrain.RegularFlatTerrain3D;
 import models.library.terrain.Terrain3D;
 import renderEngine.MasterRenderer;
@@ -80,7 +80,8 @@ public class TerrainManager extends InputInteractable {
 		}
 		SimpleEntity entity = new SimpleEntity(new Vector3f(0, 0, 0), 0, 0, 0, 1);
 		SimpleGeom3D terrainGeom =  SimpleGeom3DBuilder.create(masterRenderer, masterRenderer.getDefault3DRenderer(), "terrain").withDefaultShader().withEntity(entity).build();
-		RegularFlatTerrain3D terrain = RegularFlatTerrain3D.generateRegular(terrainGeom, entity, 10);
+		MaterialLibrary matLib = AtlasMaterialLibraryBuilder.create(4, "platformAtlas.png");
+		RegularFlatTerrain3D terrain = RegularFlatTerrain3D.generateRegular(terrainGeom, Optional.of(matLib), entity, 10);
 		setupTerrain(terrain);
 		terrains.add(terrain);
 	}

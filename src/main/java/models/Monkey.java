@@ -22,7 +22,7 @@ public class Monkey implements GeomContainer{
 	public static Monkey create(MasterRenderer masterRenderer) throws IOException {
 		Monkey monkey = new Monkey();
 		monkey.monkeyGeom = SimpleGeom3DBuilder.create(masterRenderer, masterRenderer.getDefault3DRenderer(), "monkey").withDefaultShader().build();
-		monkey.monkeyGeom.getRenderer().bindContentToGeomVAO(monkey.monkeyGeom, OBJImporter.parse(OBJECT_DESCRIPTOR,TEXTURE_DESCRIPTOR));
+		monkey.monkeyGeom.getRenderer().bindContentToGeomVAO(monkey.monkeyGeom, OBJImporter.parse(monkey.monkeyGeom.getShader(),OBJECT_DESCRIPTOR,TEXTURE_DESCRIPTOR));
 		monkey.setup();
 		return monkey;
 	}
@@ -36,13 +36,13 @@ public class Monkey implements GeomContainer{
 
 
 	@Override
-	public IEditableGeom getEditableGeom() {
+	public EditableGeom getEditableGeom() {
 		return monkeyGeom;
 	}
 
 
 	@Override
-	public IRenderableGeom getRenderableGeom() {
+	public RenderableGeom getRenderableGeom() {
 		return monkeyGeom;
 	}
 

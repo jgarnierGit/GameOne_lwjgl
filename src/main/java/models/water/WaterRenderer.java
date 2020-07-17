@@ -7,14 +7,14 @@ import org.lwjgl.opengl.GL30;
 import org.lwjglx.util.vector.Matrix4f;
 
 import camera.CameraEntity;
-import models.data.OBJContent;
+import entities.Light;
 import renderEngine.DisplayManager;
-import renderEngine.DrawRenderer;
+import renderEngine.DrawRendererCommon;
 import renderEngine.Loader.VBOIndex;
 import renderEngine.RenderingParameters;
 import toolbox.Maths;
 
-public class WaterRenderer extends DrawRenderer{
+public class WaterRenderer extends DrawRendererCommon{
 
 private WaterFrameBuffer frameBuffer;
 private static final float WAVE_SPEED = 0.03f;
@@ -22,20 +22,24 @@ private static final float WAVE_SPEED = 0.03f;
 private float moveFactor =0;
 
 private int dudv;
+private int normalMap;
+private Light sun;
 
 //TODO extract in abstract class specific for 3D
 private CameraEntity camera;
-	private WaterRenderer(WaterFrameBuffer frameBuffer, CameraEntity camera, int dudv) {
+	private WaterRenderer(WaterFrameBuffer frameBuffer, CameraEntity camera, int dudv, int normalMap, Light sun) {
 		this.frameBuffer = frameBuffer;
 		this.camera = camera;
 		this.dudv = dudv;
+		this.normalMap = normalMap;
+		this.sun = sun;
 	}
 	
-	public static WaterRenderer create(WaterFrameBuffer frameBuffer, WaterShader waterShader, CameraEntity camera, int dudv) {
+	public static WaterRenderer create(WaterFrameBuffer frameBuffer, WaterShader waterShader, CameraEntity camera, int dudv, int normalMap, Light sun) {
 		waterShader.start();
 		waterShader.connectTextureUnits();
 		waterShader.stop();
-		return new WaterRenderer(frameBuffer, camera, dudv);
+		return new WaterRenderer(frameBuffer, camera, dudv, normalMap, sun);
 	}
 
 	@Override
@@ -46,6 +50,7 @@ private CameraEntity camera;
 			moveFactor += WAVE_SPEED * DisplayManager.getFrameTimeSeconds();
 			moveFactor %=1;
 			draw3DShader.loadMovmentFactor(moveFactor);
+			draw3DShader.loadLight(sun);
 			prepare(params.getVAOGeom().getVaoId());
 		//	GL13.glActiveTexture(GL13.GL_TEXTURE2);
 		//	GL11.glBindTexture(GL11.GL_TEXTURE_2D, (int) params.getVAOGeom().getTextures().toArray()[0]); //DudvMap
@@ -75,11 +80,18 @@ private CameraEntity camera;
 		GL11.glBindTexture(GL11.GL_TEXTURE_2D,  frameBuffer.getRefractionTexture());
 		GL13.glActiveTexture(GL13.GL_TEXTURE2);
 		GL11.glBindTexture(GL11.GL_TEXTURE_2D,  this.dudv);
+		GL13.glActiveTexture(GL13.GL_TEXTURE3);
+		GL11.glBindTexture(GL11.GL_TEXTURE_2D,  this.normalMap);
+		GL13.glActiveTexture(GL13.GL_TEXTURE4);
+		GL11.glBindTexture(GL11.GL_TEXTURE_2D,  frameBuffer.getRefractionDepthTexture());
+		GL11.glEnable(GL11.GL_BLEND);
+		GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
 	}
 
 	@Override
 	protected void unbindGeom() {
 		GL20.glDisableVertexAttribArray(VBOIndex.POSITION_INDEX);
 		GL30.glBindVertexArray(0);
+		GL11.glDisable(GL11.GL_BLEND);
 	}
 }

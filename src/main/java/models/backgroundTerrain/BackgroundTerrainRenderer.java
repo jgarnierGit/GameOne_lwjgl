@@ -6,13 +6,13 @@ import org.lwjglx.util.vector.Matrix4f;
 import org.lwjglx.util.vector.Vector4f;
 
 import camera.CameraEntity;
-import renderEngine.DrawRenderer;
+import renderEngine.DrawRendererCommon;
 import renderEngine.Loader.VBOIndex;
 import renderEngine.RenderingParameters;
 import shaderManager.IShader3D;
 import toolbox.Maths;
 
-public class BackgroundTerrainRenderer extends DrawRenderer{
+public class BackgroundTerrainRenderer extends DrawRendererCommon{
 //TODO extract in abstract class specific for 3D
 private CameraEntity camera;
 private Vector4f clipPlane;

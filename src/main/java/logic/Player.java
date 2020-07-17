@@ -17,8 +17,8 @@ import entities.EntityTutos;
 import entities.SimpleEntity;
 import inputListeners.InputInteractable;
 import inputListeners.PlayerInputListener;
-import models.IEditableGeom;
-import models.IRenderableGeom;
+import models.EditableGeom;
+import models.RenderableGeom;
 import models.SimpleGeom3D;
 import models.importer.Model3D;
 import models.library.terrain.Terrain3D;
@@ -62,7 +62,7 @@ public class Player extends InputInteractable {
 		resetTurn = null;
 	}
 
-	public static Player create(PlayerInputListener inputListener, IRenderableGeom model, Vector3f positions, float rotX,
+	public static Player create(PlayerInputListener inputListener, RenderableGeom model, Vector3f positions, float rotX,
 			float rotY, float rotZ, float scale) {
 
 		Entity entity = model.getRenderingParameters().getEntities().get(0);
