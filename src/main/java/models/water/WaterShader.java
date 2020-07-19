@@ -102,12 +102,12 @@ private int locationCameraPosition;
 
 	@Override
 	public int getColorShaderIndex() {
-		throw new NotImplementedException();
+		return -1;
 	}
 
 	@Override
 	public int getTextureShaderIndex() {
-		throw new NotImplementedException();
+		return -1;
 	}
 
 	@Override
@@ -117,6 +117,6 @@ private int locationCameraPosition;
 
 	@Override
 	public int getNormalShaderIndex() {
-		throw new NotImplementedException();
+		return -1;
 	}
 }

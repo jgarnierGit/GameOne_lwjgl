@@ -54,13 +54,13 @@ public class MainGame {
 		WaterFrameBuffer waterFrameBuffer = new WaterFrameBuffer();
 		Light sun = new Light(new Vector3f(-30.0f,100.0f,-100.0f), new Vector3f(1.0f,0.95f,1.0f));
 		Water water = Water.create(masterRenderer, waterFrameBuffer, camera.getCamera(), sun, "waterVertexShader.txt", "waterFragmentShader.txt");
-		/** example of using FrameBuffer as Gui Texture **/
+		/** example of using FrameBuffer as Gui Texture 
 		GuiTexture guiReflection =new GuiTexture(waterFrameBuffer.getReflectionTexture(), new Vector2f(-0.5f,0.5f), new Vector2f(0.25f,0.25f));
 		GuiTexture guiRefraction =new GuiTexture(waterFrameBuffer.getRefractionTexture(), new Vector2f(0.5f,0.5f), new Vector2f(0.25f,0.25f));
 		GuiRenderer guiRenderer = new GuiRenderer(masterRenderer.getLoader());
 		guiRenderer.addGui(guiReflection);
 		guiRenderer.addGui(guiRefraction);
-		/****/
+		**/
 		while (DisplayManager.isRunning()) {
 			playerInputListener.update();
 			camera.update();
@@ -128,7 +128,7 @@ public class MainGame {
 			((BackgroundTerrainRenderer) terrainGenerator.getUnderGroundTerrain().getRenderableGeom().getRenderer()).setClipPlane(clipPlane);
 			masterRenderer.reloadRenderingDatas(new ArrayList<>(), toRender, clipPlane);
 			masterRenderer.render();
-			guiRenderer.render();
+		//	guiRenderer.render();
 			DisplayManager.updateDisplay();
 		}
 		playerInputListener.clear();

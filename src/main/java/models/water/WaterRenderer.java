@@ -8,6 +8,7 @@ import org.lwjglx.util.vector.Matrix4f;
 
 import camera.CameraEntity;
 import entities.Light;
+import models.RenderableGeom;
 import renderEngine.DisplayManager;
 import renderEngine.DrawRendererCommon;
 import renderEngine.Loader.VBOIndex;
@@ -44,17 +45,15 @@ private CameraEntity camera;
 
 	@Override
 	public void render() {
-		for (RenderingParameters params : renderingParams) {
+		for (RenderableGeom geom : geoms) {
+			RenderingParameters params = geom.getRenderingParameters();
 			WaterShader draw3DShader = (WaterShader) params.getShader();
 			draw3DShader.start();
 			moveFactor += WAVE_SPEED * DisplayManager.getFrameTimeSeconds();
 			moveFactor %=1;
 			draw3DShader.loadMovmentFactor(moveFactor);
 			draw3DShader.loadLight(sun);
-			prepare(params.getVAOGeom().getVaoId());
-		//	GL13.glActiveTexture(GL13.GL_TEXTURE2);
-		//	GL11.glBindTexture(GL11.GL_TEXTURE_2D, (int) params.getVAOGeom().getTextures().toArray()[0]); //DudvMap
-			
+			prepare(geom.getVAOGeom().getVaoId());
 			Matrix4f viewMatrix = camera.getViewMatrix();
 			draw3DShader.loadViewMatrix(viewMatrix);
 			draw3DShader.loadCameraPosition(camera.getPosition());
@@ -63,7 +62,7 @@ private CameraEntity camera;
 				Matrix4f transformationM = Maths.createTransformationMatrix(entity.getPositions(), entity.getRotX(),
 						entity.getRotY(), entity.getRotZ(), entity.getScale());
 				draw3DShader.loadTransformationMatrix(transformationM);
-				genericDrawRender(params);
+				genericDrawRender(geom);
 			});
 			unbindGeom();
 			draw3DShader.stop();

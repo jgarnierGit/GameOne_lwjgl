@@ -13,14 +13,10 @@ import java.util.Optional;
 import org.lwjglx.util.vector.Vector3f;
 
 import entities.Entity;
-import entities.EntityTutos;
 import entities.SimpleEntity;
 import inputListeners.InputInteractable;
 import inputListeners.PlayerInputListener;
-import models.EditableGeom;
 import models.RenderableGeom;
-import models.SimpleGeom3D;
-import models.importer.Model3D;
 import models.library.terrain.Terrain3D;
 import renderEngine.DisplayManager;
 import utils.Direction;
@@ -71,7 +67,7 @@ public class Player extends InputInteractable {
 		entity.setRotY(rotY);
 		entity.setRotZ(rotZ);
 		entity.setScale(scale);
-		Player player = new Player(inputListener,entity);
+		Player player = new Player(inputListener, entity);
 		player.bindInputHanlder();
 		player.respawner = new SimpleEntity(new Vector3f(0, 10, 0), rotX, rotY, rotZ, scale);
 		return player;
@@ -134,6 +130,21 @@ public class Player extends InputInteractable {
 				respawner.getPositions().z));
 		upwardSpeed = 0;
 		fallingTimeout = 0;
+		updateActiveTerrainTexture();
+
+	}
+
+	private void updateActiveTerrainTexture() {
+		if (activeTerrain == null) {
+			return;
+		}
+		int terrainTexture = activeTerrain.getTextureAtlasIndex();
+		if (terrainTexture == 3) {
+			terrainTexture = 0;
+		} else {
+			terrainTexture++;
+		}
+		activeTerrain.setTextureAtlasIndex(terrainTexture);
 	}
 
 	private void jump() {
@@ -167,23 +178,22 @@ public class Player extends InputInteractable {
 				jumping = false;
 			}
 			ySpeed = upwardSpeed * DisplayManager.getFrameTimeSeconds();
-		}
-		else {
+		} else {
 			jumpingStillAllowed = 0;
 		}
 		return ySpeed;
 	}
 
 	private void adjustYPositionToTerrains(TerrainManager terrainManager, CameraManager camera, float finalspeed) {
-		Optional<Entity> terrain = getActiveTerrain(terrainManager); 
+		Optional<Entity> terrain = getActiveTerrain(terrainManager);
 		if (terrain.isPresent()) {
-			Entity terrainEntity = terrain.get();
-			float elevation = terrainEntity.getPositions().y;
-			//avoid passing through at high velocity
+			activeTerrain = terrain.get();
+			float elevation = activeTerrain.getPositions().y;
+			// avoid passing through at high velocity
 			finalspeed = finalspeed < 0.5f ? (float) 0.5 : finalspeed;
 			if (!jumping && Math.abs(elevation - entity.getPositions().y) < finalspeed) {
 				Entity respawnerEntity = new SimpleEntity(
-						new Vector3f(entity.getPositions().x, terrainEntity.getPositions().y, entity.getPositions().z),
+						new Vector3f(entity.getPositions().x, activeTerrain.getPositions().y, entity.getPositions().z),
 						entity.getRotX(), entity.getRotY(), entity.getRotZ(), 1);
 				setRespawner(respawnerEntity);
 				upwardSpeed = 0;
@@ -199,23 +209,22 @@ public class Player extends InputInteractable {
 	private Optional<Entity> getActiveTerrain(TerrainManager terrainManager) {
 		List<Entity> activeTerrainEntities = new ArrayList<>();
 		Optional<Entity> activeEntityterrain = Optional.empty();
-		for(Terrain3D terrain : terrainManager.getTerrains()) {
+		for (Terrain3D terrain : terrainManager.getTerrains()) {
 			activeTerrainEntities.addAll(terrainManager.getActiveTerrain(entity.getPositions(), terrain));
 		}
-		if(activeTerrainEntities.isEmpty()) {
+		if (activeTerrainEntities.isEmpty()) {
 			return activeEntityterrain;
-		}
-		if(activeTerrain == null) {
-			activeEntityterrain = Optional.of(activeTerrainEntities.get(0));
-		}
-		else if(activeTerrainEntities.contains(activeTerrain)) {
+		} else if (activeTerrainEntities.contains(activeTerrain)) {
 			activeEntityterrain = Optional.of(activeTerrain);
+		} else {
+			activeEntityterrain = Optional.of(activeTerrainEntities.get(0));
 		}
 		return activeEntityterrain;
 	}
 
 	/**
 	 * falling out of world means no more reachable terrain are below player.
+	 * 
 	 * @param worldPosition
 	 * @param camera
 	 * @param terrains
@@ -224,8 +233,9 @@ public class Player extends InputInteractable {
 		if (fallingTimeout == 0) {
 			List<Entity> filteredTerrainEntities = new ArrayList<>();
 			for (Terrain3D terrain : terrains) {
-				filteredTerrainEntities.addAll(SpatialComparator.filterEntitiesByDirection(worldPosition,
-						Direction.BOTTOM, Operator.INCLUSIVE, terrain.getRenderableGeom().getRenderingParameters().getEntities()));
+				filteredTerrainEntities.addAll(
+						SpatialComparator.filterEntitiesByDirection(worldPosition, Direction.BOTTOM, Operator.INCLUSIVE,
+								terrain.getRenderableGeom().getRenderingParameters().getEntities()));
 			}
 			if (filteredTerrainEntities.isEmpty()) {
 				// init falling

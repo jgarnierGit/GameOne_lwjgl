@@ -80,7 +80,7 @@ public class TerrainManager extends InputInteractable {
 		}
 		SimpleEntity entity = new SimpleEntity(new Vector3f(0, 0, 0), 0, 0, 0, 1);
 		SimpleGeom3D terrainGeom =  SimpleGeom3DBuilder.create(masterRenderer, masterRenderer.getDefault3DRenderer(), "terrain").withDefaultShader().withEntity(entity).build();
-		MaterialLibrary matLib = AtlasMaterialLibraryBuilder.create(4, "platformAtlas.png");
+		MaterialLibrary matLib = AtlasMaterialLibraryBuilder.create(2, "platformAtlas.png");
 		RegularFlatTerrain3D terrain = RegularFlatTerrain3D.generateRegular(terrainGeom, Optional.of(matLib), entity, 10);
 		setupTerrain(terrain);
 		terrains.add(terrain);

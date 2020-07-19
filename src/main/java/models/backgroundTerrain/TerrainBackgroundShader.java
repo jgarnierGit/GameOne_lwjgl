@@ -104,7 +104,7 @@ public class TerrainBackgroundShader extends ShaderProgram implements IShader3D 
 
 	@Override
 	public int getColorShaderIndex() {
-		throw new NotImplementedException();
+		return -1;
 	}
 
 	@Override

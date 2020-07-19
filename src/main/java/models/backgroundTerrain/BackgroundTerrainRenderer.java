@@ -6,6 +6,7 @@ import org.lwjglx.util.vector.Matrix4f;
 import org.lwjglx.util.vector.Vector4f;
 
 import camera.CameraEntity;
+import models.RenderableGeom;
 import renderEngine.DrawRendererCommon;
 import renderEngine.Loader.VBOIndex;
 import renderEngine.RenderingParameters;
@@ -36,11 +37,12 @@ private Vector4f clipPlane;
 
 	@Override
 	public void render() {
-		for (RenderingParameters params : renderingParams) {
+		for (RenderableGeom geom : geoms) {
+			RenderingParameters params = geom.getRenderingParameters();
 			TerrainBackgroundShader draw3DShader = (TerrainBackgroundShader) params.getShader();
 			draw3DShader.start();
 			draw3DShader.loadClipPlane(this.clipPlane);
-			prepare(params.getVAOGeom().getVaoId());
+			prepare(geom.getVAOGeom().getVaoId());
 			Matrix4f viewMatrix = camera.getViewMatrix();
 			draw3DShader.loadViewMatrix(viewMatrix);
 			draw3DShader.loadShineVariables(1, 0);
@@ -49,7 +51,7 @@ private Vector4f clipPlane;
 				Matrix4f transformationM = Maths.createTransformationMatrix(entity.getPositions(), entity.getRotX(),
 						entity.getRotY(), entity.getRotZ(), entity.getScale());
 				draw3DShader.loadTransformationMatrix(transformationM);
-				genericDrawRender(params);
+				genericDrawRender(geom);
 			});
 			unbindGeom();
 			draw3DShader.stop();

@@ -59,17 +59,18 @@ public class Water implements GeomContainer{
 		Vector3f rightFar = new Vector3f(1, 0, 1);
 		Vector3f leftFar = new Vector3f(0, 0, 1);
 		//TODO addPoint must be unique, and add setFaces which will use indices vertices.
-		this.waterGeom.addPoint(leftNear);
-		this.waterGeom.addPoint(rightFar);
-		this.waterGeom.addPoint(rightNear);
+		GeomEditor geomEditor = this.waterGeom.getGeomEditor();
+		geomEditor.addPoint(leftNear);
+		geomEditor.addPoint(rightFar);
+		geomEditor.addPoint(rightNear);
 		
 
-		this.waterGeom.addPoint(leftNear);
-		this.waterGeom.addPoint(leftFar);
-		this.waterGeom.addPoint(rightFar);
+		geomEditor.addPoint(leftNear);
+		geomEditor.addPoint(leftFar);
+		geomEditor.addPoint(rightFar);
 		
 		this.waterGeom.getRenderingParameters().setRenderMode(GL11.GL_TRIANGLES);
-		renderer.reloadGeomToVAO(this.waterGeom);
+		this.waterGeom.reloadVao();
 	}
 
 	@Override
